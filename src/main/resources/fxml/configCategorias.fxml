@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="sgis.vista.ConfigCategoriasVista"
+      stylesheets="@../css/estilos.css"
+      spacing="12">
+    <padding>
+        <Insets top="16" right="18" bottom="16" left="18" />
+    </padding>
+
+    <Label text="Categorías con las que se agrupan los productos. Solo se pueden eliminar las que no tienen productos."
+           style="-fx-text-fill: #78809A;" wrapText="true" />
+
+    <HBox alignment="CENTER_RIGHT">
+        <Region HBox.hgrow="ALWAYS" />
+        <Button styleClass="boton-primario" text="+ Nueva categoría" onAction="#nuevaCategoria" />
+    </HBox>
+
+    <TableView fx:id="tablaCategorias" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colNombre" text="Categoría" prefWidth="280" />
+            <TableColumn fx:id="colProductos" text="Productos" prefWidth="120" />
+            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="240" />
+        </columns>
+    </TableView>
+
+    <Label fx:id="lblMensaje" text="" wrapText="true" />
+</VBox>

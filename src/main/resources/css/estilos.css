@@ -1,0 +1,518 @@
+/* ===== Paleta de colores SGIS (misma que en el diseño validado en Rocket) ===== */
+.root {
+    -fx-font-family: "Segoe UI";
+    -fx-background-color: #F5F6FA;
+}
+
+/* --- Sidebar --- */
+.sidebar {
+    -fx-background-color: #14213D;
+    -fx-padding: 0;
+    -fx-pref-width: 220;
+}
+
+.sidebar-logo {
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-padding: 20 16 20 16;
+}
+
+.nav-item {
+    -fx-graphic-text-gap: 12;
+    -fx-background-color: transparent;
+    -fx-text-fill: #C7CDE0;
+    -fx-font-size: 13px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 12 16 12 16;
+    -fx-pref-width: 220;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+}
+
+.nav-item:hover {
+    -fx-background-color: #1E2C52;
+    -fx-text-fill: white;
+}
+
+.nav-item-active {
+    -fx-graphic-text-gap: 12;
+    -fx-background-color: #1E2C52;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 12 16 12 16;
+    -fx-pref-width: 220;
+    -fx-border-color: #2C7BE5 transparent transparent transparent;
+    -fx-border-width: 0 0 0 4;
+}
+
+.sidebar-footer-box {
+    -fx-padding: 16 16 16 16;
+}
+
+.sidebar-footer {
+    -fx-text-fill: #8892B0;
+    -fx-font-size: 11px;
+    -fx-padding: 0;
+}
+
+/* --- Topbar --- */
+.topbar {
+    -fx-background-color: white;
+    -fx-padding: 14 24 14 24;
+    -fx-border-color: transparent transparent #E0E3EB transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.topbar-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #14213D;
+}
+
+/* --- Tarjetas KPI --- */
+.kpi-card {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: #E0E3EB;
+    -fx-padding: 14 18 14 18;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 6, 0, 0, 2);
+}
+
+/* Ancho fijo solo para las tarjetas de indicadores (KPI) */
+.kpi-stat {
+    -fx-pref-width: 180;
+    -fx-min-width: 110;
+    -fx-padding: 12 14 12 14;
+}
+
+/* Tarjetas con cifras en pesos: reciben más espacio para que el número no se corte */
+.kpi-stat-ancho {
+    -fx-pref-width: 230;
+    -fx-min-width: 150;
+}
+
+.kpi-stat .kpi-title {
+    -fx-font-size: 11px;
+}
+
+.kpi-title {
+    -fx-font-size: 12px;
+    -fx-text-fill: #78809A;
+}
+
+.kpi-value {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #14213D;
+}
+
+.kpi-value-blue    { -fx-text-fill: #2C7BE5; }
+.kpi-value-amber    { -fx-text-fill: #F5A623; }
+.kpi-value-red     { -fx-text-fill: #E74C3C; }
+.kpi-value-green   { -fx-text-fill: #2ECC71; }
+
+/* --- Encabezado de sección (tabla de productos) --- */
+.section-header {
+    -fx-background-color: #2ECC71;
+    -fx-background-radius: 8 8 0 0;
+    -fx-padding: 10 16 10 16;
+}
+
+.section-header-label {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+}
+
+/* --- Badges de estado --- */
+.badge-suficiente {
+    -fx-background-color: #E6F9EF;
+    -fx-text-fill: #1E9E5B;
+    -fx-background-radius: 12;
+    -fx-padding: 3 10 3 10;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.badge-stockbajo {
+    -fx-background-color: #FEF3E0;
+    -fx-text-fill: #B9740C;
+    -fx-background-radius: 12;
+    -fx-padding: 3 10 3 10;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.badge-agotado {
+    -fx-background-color: #FCE9E7;
+    -fx-text-fill: #C0392B;
+    -fx-background-radius: 12;
+    -fx-padding: 3 10 3 10;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+/* --- Botones primarios --- */
+.boton-primario {
+    -fx-background-color: #14213D;
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+    -fx-background-radius: 6;
+    -fx-padding: 8 14 8 14;
+    -fx-cursor: hand;
+}
+
+.boton-primario:hover {
+    -fx-background-color: #1E2C52;
+}
+
+
+/* ===== Login ===== */
+.login-fondo {
+    -fx-background-color: linear-gradient(to bottom right, #F5F6FA, #E6E9F2);
+}
+
+.login-tarjeta {
+    -fx-background-color: white;
+    -fx-background-radius: 22;
+    -fx-padding: 38 42 30 42;
+    -fx-effect: dropshadow(gaussian, rgba(20,33,61,0.14), 44, 0, 0, 14);
+}
+
+.login-titulo {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #14213D;
+}
+
+.login-subtitulo {
+    -fx-font-size: 13px;
+    -fx-text-fill: #78809A;
+}
+
+.login-campo, .form-campo {
+    -fx-background-color: #F2F3F7;
+    -fx-background-insets: 0;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: transparent;
+    -fx-border-width: 2;
+    -fx-padding: 11 14 11 14;
+    -fx-font-size: 14px;
+}
+
+.login-campo:focused, .form-campo:focused {
+    -fx-background-color: white;
+    -fx-border-color: #2C7BE5;
+}
+
+.login-boton, .form-boton {
+    -fx-background-color: #14213D;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 12;
+    -fx-padding: 12 18 12 18;
+    -fx-cursor: hand;
+}
+
+.login-boton:hover, .form-boton:hover {
+    -fx-background-color: #1E2C52;
+}
+
+.login-enlace, .form-boton-texto {
+    -fx-background-color: transparent;
+    -fx-text-fill: #2C7BE5;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+}
+
+.login-enlace:hover, .form-boton-texto:hover {
+    -fx-underline: true;
+}
+
+.login-mensaje, .form-mensaje {
+    -fx-text-fill: #C0392B;
+    -fx-font-size: 12px;
+}
+
+.login-pie {
+    -fx-text-fill: #8892B0;
+    -fx-font-size: 11px;
+}
+
+/* ===== Aviso de factura (pantalla Ventas) ===== */
+.aviso-factura {
+    -fx-background-color: #EEF4FE;
+    -fx-background-radius: 10;
+    -fx-padding: 10 12 10 12;
+}
+
+.aviso-factura-titulo {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1F5FBF;
+}
+
+.aviso-factura-texto {
+    -fx-font-size: 11px;
+    -fx-text-fill: #46506B;
+}
+
+/* ===== Botón secundario ===== */
+.boton-secundario {
+    -fx-background-color: white;
+    -fx-text-fill: #14213D;
+    -fx-border-color: #14213D;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-font-size: 12px;
+    -fx-padding: 8 14 8 14;
+    -fx-cursor: hand;
+}
+
+.boton-secundario:hover {
+    -fx-background-color: #F2F3F7;
+}
+
+
+/* ===== Menú lateral: marca y usuario ===== */
+.sidebar-marca {
+    -fx-padding: 18 14 18 14;
+}
+
+.sidebar-marca-titulo {
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.sidebar-marca-sub {
+    -fx-text-fill: #8892B0;
+    -fx-font-size: 11px;
+}
+
+.sidebar-usuario {
+    -fx-text-fill: #C7CDE0;
+    -fx-font-size: 11px;
+    -fx-padding: 0 16 8 16;
+}
+
+.nav-item .image-view {
+    -fx-opacity: 0.72;
+}
+
+.nav-item:hover .image-view,
+.nav-item-active .image-view {
+    -fx-opacity: 1;
+}
+
+/* ===== Leyenda del gráfico circular ===== */
+.leyenda-texto {
+    -fx-font-size: 12px;
+    -fx-text-fill: #14213D;
+}
+
+.leyenda-fila {
+    -fx-padding: 3 4 3 4;
+    -fx-background-radius: 8;
+}
+
+.leyenda-fila:hover {
+    -fx-background-color: #F2F3F7;
+}
+
+/* ===== Formularios y ventanas (mismo estilo minimalista del login) ===== */
+.form-fondo {
+    -fx-background-color: white;
+}
+
+.form-titulo {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #14213D;
+}
+
+.form-subtitulo {
+    -fx-font-size: 12px;
+    -fx-text-fill: #78809A;
+}
+
+.form-etiqueta {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #46506B;
+}
+
+.form-nota {
+    -fx-font-size: 11px;
+    -fx-text-fill: #78809A;
+}
+
+.form-aviso {
+    -fx-background-color: #EEF4FE;
+    -fx-background-radius: 12;
+    -fx-padding: 12 14 12 14;
+}
+
+.form-combo {
+    -fx-background-color: #F2F3F7;
+    -fx-background-insets: 0;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: transparent;
+    -fx-border-width: 2;
+    -fx-padding: 4 4 4 6;
+    -fx-font-size: 14px;
+}
+
+.form-combo:focused,
+.form-combo:showing {
+    -fx-background-color: white;
+    -fx-border-color: #2C7BE5;
+}
+
+.form-combo .arrow-button {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0 10 0 8;
+}
+
+.form-combo .arrow {
+    -fx-background-color: #78809A;
+}
+
+.form-combo .list-cell {
+    -fx-text-fill: #14213D;
+    -fx-background-color: transparent;
+}
+
+/* ===== Cuadros de diálogo (confirmaciones, avisos y entradas de texto) ===== */
+.dialogo-minimal {
+    -fx-background-color: white;
+    -fx-font-size: 13px;
+}
+
+.dialogo-minimal .content.label {
+    -fx-text-fill: #14213D;
+    -fx-font-size: 14px;
+    -fx-padding: 8 8 4 8;
+}
+
+.dialogo-minimal .button-bar .button {
+    -fx-background-color: #F2F3F7;
+    -fx-background-radius: 10;
+    -fx-text-fill: #14213D;
+    -fx-padding: 8 20 8 20;
+    -fx-cursor: hand;
+}
+
+.dialogo-minimal .button-bar .button:default {
+    -fx-background-color: #14213D;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.dialogo-minimal .text-field {
+    -fx-background-color: #F2F3F7;
+    -fx-background-insets: 0;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: transparent;
+    -fx-border-width: 2;
+    -fx-padding: 9 12 9 12;
+}
+
+.dialogo-minimal .text-field:focused {
+    -fx-background-color: white;
+    -fx-border-color: #2C7BE5;
+}
+
+/* ===== Pestañas (Reportes y Configuración) con aspecto limpio ===== */
+.tab-pane > .tab-header-area > .tab-header-background {
+    -fx-background-color: transparent;
+}
+
+.tab-pane > .tab-header-area {
+    -fx-padding: 6 0 0 18;
+}
+
+.tab-pane > .tab-header-area .tab {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 8 16 8 16;
+    -fx-border-color: transparent transparent #E0E3EB transparent;
+    -fx-border-width: 0 0 2 0;
+}
+
+.tab-pane > .tab-header-area .tab:selected {
+    -fx-border-color: transparent transparent #2C7BE5 transparent;
+}
+
+.tab-pane > .tab-header-area .tab .tab-label {
+    -fx-text-fill: #78809A;
+    -fx-font-size: 13px;
+}
+
+.tab-pane > .tab-header-area .tab:selected .tab-label {
+    -fx-text-fill: #14213D;
+    -fx-font-weight: bold;
+}
+
+.tab-pane > .tab-header-area .tab:focused {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.tab-pane > .tab-content-area {
+    -fx-background-color: transparent;
+}
+
+.leyenda-scroll {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.leyenda-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* ===== Gráfico circular: separación visible entre secciones ===== */
+.chart-pie {
+    -fx-border-color: white;
+    -fx-border-width: 4;
+    -fx-background-insets: 0;
+}
+
+/* ===== Niveles de stock ===== */
+.badge-sinstock {
+    -fx-background-color: #C0392B;
+    -fx-text-fill: white;
+    -fx-background-radius: 12;
+    -fx-padding: 3 10 3 10;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.badge-bajo {
+    -fx-background-color: #FCE9E7;
+    -fx-text-fill: #C0392B;
+    -fx-background-radius: 12;
+    -fx-padding: 3 10 3 10;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.badge-medio {
+    -fx-background-color: #FFF4CC;
+    -fx-text-fill: #8A6D00;
+    -fx-background-radius: 12;
+    -fx-padding: 3 10 3 10;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}

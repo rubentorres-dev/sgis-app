@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.Region?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="sgis.vista.ProductosVista"
+            stylesheets="@../css/estilos.css">
+
+    <!-- ===================== SIDEBAR ===================== -->
+    <left>
+        <fx:include source="menuLateral.fxml" />
+    </left>
+
+    <!-- ===================== CONTENIDO ===================== -->
+    <center>
+        <VBox>
+            <HBox styleClass="topbar" spacing="10">
+                <Label styleClass="topbar-title" text="Productos" />
+            </HBox>
+
+            <VBox spacing="16">
+                <padding>
+                    <Insets top="20" right="24" bottom="20" left="24" />
+                </padding>
+
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <TextField fx:id="campoBusqueda" promptText="Buscar producto por nombre..." prefWidth="320" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button styleClass="boton-primario" text="+ Nuevo Producto" onAction="#abrirFormularioNuevo" />
+                </HBox>
+
+                <VBox>
+                    <HBox styleClass="section-header">
+                        <Label styleClass="section-header-label" text="Gestión de Productos" />
+                    </HBox>
+                    <TableView fx:id="tablaProductos" prefHeight="420">
+                        <columns>
+                            <TableColumn fx:id="colNombre" text="Nombre" prefWidth="200" />
+                            <TableColumn fx:id="colCategoria" text="Categoría" prefWidth="130" />
+                            <TableColumn fx:id="colPrecio" text="Precio" prefWidth="90" />
+                            <TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="90" />
+                            <TableColumn fx:id="colEstado" text="Estado" prefWidth="120" />
+                            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="150" />
+                        </columns>
+                    </TableView>
+                </VBox>
+
+                <Label fx:id="lblMensaje" text="" />
+            </VBox>
+        </VBox>
+    </center>
+</BorderPane>

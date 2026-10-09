@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="sgis.vista.ReportesVista"
+      stylesheets="@../css/estilos.css"
+      spacing="16">
+        <padding>
+            <Insets top="20" right="24" bottom="20" left="24" />
+        </padding>
+
+        <!-- ===== Indicadores ===== -->
+        <HBox spacing="14">
+            <VBox styleClass="kpi-card, kpi-stat">
+                <Label styleClass="kpi-title" text="Total Productos" />
+                <Label fx:id="kpiTotalProductos" styleClass="kpi-value, kpi-value-blue" text="-" />
+            </VBox>
+            <VBox styleClass="kpi-card, kpi-stat, kpi-stat-ancho">
+                <Label styleClass="kpi-title" text="Valor del Inventario" />
+                <Label fx:id="kpiValorInventario" styleClass="kpi-value, kpi-value-blue" text="-" />
+            </VBox>
+            <VBox styleClass="kpi-card, kpi-stat">
+                <Label styleClass="kpi-title" text="Stock Suficiente" />
+                <Label fx:id="kpiStockSuficiente" styleClass="kpi-value, kpi-value-green" text="-" />
+            </VBox>
+            <VBox styleClass="kpi-card, kpi-stat">
+                <Label styleClass="kpi-title" text="Stock Medio" />
+                <Label fx:id="kpiStockMedio" styleClass="kpi-value, kpi-value-amber" text="-" />
+            </VBox>
+            <VBox styleClass="kpi-card, kpi-stat">
+                <Label styleClass="kpi-title" text="Stock Bajo" />
+                <Label fx:id="kpiStockBajo" styleClass="kpi-value, kpi-value-red" text="-" />
+            </VBox>
+            <VBox styleClass="kpi-card, kpi-stat">
+                <Label styleClass="kpi-title" text="Stock Agotado" />
+                <Label fx:id="kpiStockAgotado" styleClass="kpi-value, kpi-value-red" text="-" />
+            </VBox>
+            <VBox styleClass="kpi-card, kpi-stat, kpi-stat-ancho">
+                <Label styleClass="kpi-title" text="Ventas Hoy" />
+                <Label fx:id="kpiVentasHoy" styleClass="kpi-value, kpi-value-green" text="-" />
+            </VBox>
+        </HBox>
+
+        <TabPane fx:id="pestanasReportes" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+            <tabs>
+
+                <!-- ===== Pestaña: historial de ventas ===== -->
+                <Tab text="Ventas">
+                    <content>
+                      <VBox>
+                        <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 10 12 10 12;">
+                            <Button styleClass="boton-primario" text="🔎 Buscar comprobantes" onAction="#abrirComprobantes" />
+                            <Label text="También puedes hacer doble clic sobre una venta para ver su comprobante."
+                                   style="-fx-text-fill: #78809A; -fx-font-size: 12;" />
+                        </HBox>
+                        <TableView fx:id="tablaVentas" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colVentaId" text="N°" prefWidth="60" />
+                                <TableColumn fx:id="colVentaCliente" text="Cliente" prefWidth="160" />
+                                <TableColumn fx:id="colVentaTotal" text="Total" prefWidth="100" />
+                                <TableColumn fx:id="colVentaMetodoPago" text="Método de pago" prefWidth="115" />
+                                <TableColumn fx:id="colVentaEstadoEnvio" text="Comprobante" prefWidth="260" />
+                                <TableColumn fx:id="colVentaUsuario" text="Vendió" prefWidth="200" />
+                                <TableColumn fx:id="colVentaFecha" text="Fecha" prefWidth="140" />
+                            </columns>
+                        </TableView>
+                      </VBox>
+                    </content>
+                </Tab>
+
+                <!-- ===== Pestaña: movimientos de inventario ===== -->
+                <Tab text="Movimientos">
+                    <content>
+                      <VBox>
+                        <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 10 12 10 12;">
+                            <TextField fx:id="campoBusquedaMov" prefWidth="460"
+                                       promptText="Buscar en el historial: producto, quién vendió, cliente, fecha..." />
+                            <Label fx:id="lblResultadoMov" text="" style="-fx-text-fill: #78809A;" />
+                            <Button text="🔄 Actualizar" onAction="#actualizarMovimientos" />
+                        </HBox>
+                        <TableView fx:id="tablaMovimientos" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colMovFecha" text="Fecha" prefWidth="140" />
+                                <TableColumn fx:id="colMovDescripcion" text="Movimiento" prefWidth="330" />
+                                <TableColumn fx:id="colMovCantidad" text="Cantidad" prefWidth="80" />
+                                <TableColumn fx:id="colMovValor" text="Valor" prefWidth="100" />
+                                <TableColumn fx:id="colMovUsuario" text="Hecho por (vendió / registró)" prefWidth="210" />
+                                <TableColumn fx:id="colMovCliente" text="Cliente (compró)" prefWidth="160" />
+                            </columns>
+                        </TableView>
+                      </VBox>
+                    </content>
+                </Tab>
+
+                <!-- ===== Pestaña: movimientos de configuración (auditoría) ===== -->
+                <Tab fx:id="tabAuditoria" text="Movimientos de configuración">
+                    <content>
+                      <VBox>
+                        <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 10 12 4 12;">
+                            <TextField fx:id="campoBusquedaAud" prefWidth="460"
+                                       promptText="Buscar: quién, qué hizo o sobre qué..." />
+                            <Label fx:id="lblResultadoAud" text="" style="-fx-text-fill: #78809A;" />
+                            <Button text="🔄 Actualizar" onAction="#actualizarAuditoria" />
+                        </HBox>
+                        <Label wrapText="true" style="-fx-text-fill: #78809A; -fx-font-size: 12; -fx-padding: 0 12 8 12;"
+                               text="Quién tocó el sistema: inicios y cierres de sesión, intentos de acceso fallidos, cambios de usuarios (incluso cuando alguien vio una contraseña), productos, categorías y clientes." />
+                        <TableView fx:id="tablaAuditoria" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colAudFecha" text="Fecha" prefWidth="140" />
+                                <TableColumn fx:id="colAudUsuario" text="Quién" prefWidth="230" />
+                                <TableColumn fx:id="colAudAccion" text="Qué hizo" prefWidth="230" />
+                                <TableColumn fx:id="colAudDetalle" text="Detalle" prefWidth="420" />
+                            </columns>
+                        </TableView>
+                      </VBox>
+                    </content>
+                </Tab>
+
+                <!-- ===== Pestaña: ventas de la semana ===== -->
+                <Tab text="Ventas de la semana">
+                    <content>
+                        <VBox spacing="10">
+                            <padding>
+                                <Insets top="14" right="14" bottom="14" left="14" />
+                            </padding>
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <Button text="◀ Semana anterior" onAction="#semanaAnterior" />
+                                <Button text="Esta semana" onAction="#semanaActual" />
+                                <Button text="Semana siguiente ▶" onAction="#semanaSiguiente" />
+                                <Label fx:id="lblSemana" style="-fx-font-weight: bold; -fx-padding: 0 0 0 12;" text="" />
+                            </HBox>
+                            <Label fx:id="lblTotalSemana" text="" />
+                            <BarChart fx:id="graficaSemana" legendVisible="false" animated="false" VBox.vgrow="ALWAYS">
+                                <xAxis>
+                                    <CategoryAxis side="BOTTOM" />
+                                </xAxis>
+                                <yAxis>
+                                    <NumberAxis fx:id="ejeY" side="LEFT" />
+                                </yAxis>
+                            </BarChart>
+                        </VBox>
+                    </content>
+                </Tab>
+
+                <!-- ===== Pestaña: informe de ventas (PDF) ===== -->
+                <Tab text="Informe de ventas">
+                    <content>
+                        <VBox spacing="14">
+                            <padding>
+                                <Insets top="20" right="20" bottom="20" left="20" />
+                            </padding>
+                            <Label text="Elige el rango de fechas del informe" styleClass="topbar-title" />
+                            <Label text="Se generará un PDF con todas las ventas del periodo, listo para guardar o imprimir."
+                                   style="-fx-text-fill: #78809A;" />
+                            <HBox spacing="12" alignment="CENTER_LEFT">
+                                <Label text="Desde" />
+                                <DatePicker fx:id="dpDesde" />
+                                <Label text="Hasta" />
+                                <DatePicker fx:id="dpHasta" />
+                            </HBox>
+                            <HBox>
+                                <Button styleClass="boton-primario" text="🖨 Imprimir / Descargar informe (PDF)" onAction="#generarInforme" />
+                            </HBox>
+                            <Label fx:id="lblInforme" text="" wrapText="true" />
+                        </VBox>
+                    </content>
+                </Tab>
+
+                <!-- ===== Pestaña: respaldo de la base de datos ===== -->
+                <Tab text="Respaldo">
+                    <content>
+                        <VBox spacing="14">
+                            <padding>
+                                <Insets top="20" right="20" bottom="20" left="20" />
+                            </padding>
+                            <Label text="Respaldo de la base de datos" styleClass="topbar-title" />
+                            <Label text="El sistema crea un respaldo automático cada hora mientras la aplicación está abierta, y conserva los 168 más recientes (7 días)."
+                                   style="-fx-text-fill: #78809A;" wrapText="true" />
+                            <Label fx:id="lblRespaldo" text="" />
+                            <Label fx:id="lblCarpetaRespaldo" text="" wrapText="true" style="-fx-text-fill: #78809A;" />
+                            <HBox>
+                                <Button styleClass="boton-primario" text="Respaldar ahora" onAction="#respaldarAhora" />
+                            </HBox>
+                        </VBox>
+                    </content>
+                </Tab>
+
+            </tabs>
+        </TabPane>
+
+        <Label fx:id="lblMensaje" text="" />
+</VBox>

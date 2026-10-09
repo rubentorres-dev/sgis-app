@@ -1,0 +1,35 @@
+# ---- Maven / compilación ----
+target/
+dependency-reduced-pom.xml
+
+# ---- Aplicación empaquetada (se genera con empaquetar.bat) ----
+dist/
+build/
+
+# ---- NetBeans ----
+nbproject/private/
+nbbuild/
+nbdist/
+
+# ---- Otros editores ----
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# ---- Archivos locales del programa (viven en la carpeta del usuario, no en el proyecto) ----
+*.log
+SGIS_Respaldos/
+.sgis/
+
+# ---- Secretos: NUNCA subir credenciales reales ----
+*.key
+.env
+correo.properties
+
+# ---- Sistema operativo ----
+Thumbs.db
+desktop.ini
+.DS_Store

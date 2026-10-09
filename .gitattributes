@@ -1,0 +1,10 @@
+# Git decide los saltos de línea, salvo en los archivos de Windows, que deben conservar CRLF
+* text=auto
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Archivos binarios: no se tocan
+*.png binary
+*.ico binary
+*.jpg binary
+*.jar binary

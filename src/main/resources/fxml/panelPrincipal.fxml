@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.Region?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="sgis.vista.PanelPrincipalVista"
+            stylesheets="@../css/estilos.css">
+
+    <!-- ===================== SIDEBAR ===================== -->
+    <left>
+        <fx:include source="menuLateral.fxml" />
+    </left>
+
+    <!-- ===================== CONTENIDO ===================== -->
+    <center>
+        <VBox>
+            <!-- Barra superior -->
+            <HBox styleClass="topbar" spacing="10">
+                <Label fx:id="lblBienvenida" styleClass="topbar-title" text="¡Bienvenido!" />
+            </HBox>
+
+            <VBox spacing="16">
+                <padding>
+                    <Insets top="20" right="24" bottom="20" left="24" />
+                </padding>
+
+                <!-- Tarjetas KPI -->
+                <HBox spacing="14">
+                    <VBox styleClass="kpi-card, kpi-stat">
+                        <Label styleClass="kpi-title" text="Total Productos" />
+                        <Label fx:id="kpiTotalProductos" styleClass="kpi-value, kpi-value-blue" text="-" />
+                    </VBox>
+                    <VBox styleClass="kpi-card, kpi-stat">
+                        <Label styleClass="kpi-title" text="Stock Suficiente" />
+                        <Label fx:id="kpiStockSuficiente" styleClass="kpi-value, kpi-value-green" text="-" />
+                    </VBox>
+                    <VBox styleClass="kpi-card, kpi-stat">
+                        <Label styleClass="kpi-title" text="Stock Medio" />
+                        <Label fx:id="kpiStockMedio" styleClass="kpi-value, kpi-value-amber" text="-" />
+                    </VBox>
+                    <VBox styleClass="kpi-card, kpi-stat">
+                        <Label styleClass="kpi-title" text="Stock Bajo" />
+                        <Label fx:id="kpiStockBajo" styleClass="kpi-value, kpi-value-red" text="-" />
+                    </VBox>
+                    <VBox styleClass="kpi-card, kpi-stat">
+                        <Label styleClass="kpi-title" text="Stock Agotado" />
+                        <Label fx:id="kpiStockAgotado" styleClass="kpi-value, kpi-value-red" text="-" />
+                    </VBox>
+                    <VBox styleClass="kpi-card, kpi-stat, kpi-stat-ancho">
+                        <Label styleClass="kpi-title" text="Ventas Hoy" />
+                        <Label fx:id="kpiVentasHoy" styleClass="kpi-value, kpi-value-green" text="-" />
+                    </VBox>
+                </HBox>
+
+                <HBox spacing="16" VBox.vgrow="ALWAYS">
+
+                    <!-- Tabla de productos -->
+                    <VBox HBox.hgrow="ALWAYS">
+                        <HBox styleClass="section-header">
+                            <Label styleClass="section-header-label" text="Tabla de productos (resumen y alertas)" />
+                        </HBox>
+                        <TableView fx:id="tablaProductos" prefHeight="340" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colNombre" text="Nombre" prefWidth="220" />
+                                <TableColumn fx:id="colPrecio" text="Precio" prefWidth="100" />
+                                <TableColumn fx:id="colCantidad" text="Cantidad Disponible" prefWidth="150" />
+                                <TableColumn fx:id="colEstado" text="Estado" prefWidth="150" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+
+                    <!-- Gráfica circular interactiva: stock por producto -->
+                    <VBox styleClass="kpi-card" spacing="8" prefWidth="320" minWidth="320" maxWidth="320">
+                        <Label styleClass="topbar-title" text="Stock por producto" />
+                        <Label text="Pasa el mouse o haz clic sobre una sección" style="-fx-font-size: 11; -fx-text-fill: #78809A;" />
+                        <StackPane>
+                            <PieChart fx:id="graficaProductos" legendVisible="false" labelsVisible="false"
+                                      animated="false" startAngle="90"
+                                      prefWidth="256" prefHeight="256" minWidth="256" minHeight="256"
+                                      maxWidth="256" maxHeight="256" />
+                            <Circle radius="62" fill="WHITE" mouseTransparent="true" />
+                            <VBox alignment="CENTER" mouseTransparent="true" maxWidth="100">
+                                <Label fx:id="lblDonaTitulo" text="Stock total" wrapText="true" textAlignment="CENTER"
+                                       style="-fx-font-size: 11; -fx-text-fill: #78809A;" />
+                                <Label fx:id="lblDonaValor" text="-" style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #14213D;" />
+                                <Label fx:id="lblDonaDetalle" text="" style="-fx-font-size: 11; -fx-text-fill: #78809A;" />
+                            </VBox>
+                        </StackPane>
+                        <ScrollPane styleClass="leyenda-scroll" fitToWidth="true" hbarPolicy="NEVER"
+                                    prefHeight="120" minHeight="120" maxHeight="120">
+                            <content>
+                                <VBox fx:id="leyendaProductos" spacing="10" />
+                            </content>
+                        </ScrollPane>
+                        <Label styleClass="form-nota" wrapText="true"
+                               text="Las secciones muy pequeñas se dibujan un poco más grandes para poder seleccionarlas. Las unidades y porcentajes mostrados son los reales." />
+                    </VBox>
+                </HBox>
+
+                <Label fx:id="lblMensaje" text="" />
+            </VBox>
+        </VBox>
+    </center>
+</BorderPane>

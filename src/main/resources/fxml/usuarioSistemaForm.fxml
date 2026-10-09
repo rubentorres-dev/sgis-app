@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import sgis.vista.CampoContrasena?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="sgis.vista.UsuarioSistemaFormVista"
+      styleClass="form-fondo"
+      stylesheets="@../css/estilos.css"
+      spacing="6" prefWidth="440">
+    <padding>
+        <Insets top="28" right="32" bottom="26" left="32" />
+    </padding>
+
+    <Label fx:id="lblTitulo" styleClass="form-titulo" text="Nuevo usuario" />
+    <Label styleClass="form-subtitulo" text="Cuenta con la que se entra al sistema." />
+
+    <Label styleClass="form-etiqueta" text="Nombre completo" style="-fx-padding: 12 0 0 0;" />
+    <TextField fx:id="campoNombre" styleClass="form-campo" />
+
+    <Label styleClass="form-etiqueta" text="Usuario (para iniciar sesión)" style="-fx-padding: 8 0 0 0;" />
+    <TextField fx:id="campoLogin" styleClass="form-campo" />
+
+    <Label styleClass="form-etiqueta" text="Rol" style="-fx-padding: 8 0 0 0;" />
+    <ComboBox fx:id="comboRol" styleClass="form-combo" maxWidth="Infinity" />
+    <VBox fx:id="boxAccesoRol" styleClass="form-aviso" spacing="8">
+        <Label text="Acceso de este rol" style="-fx-font-weight: bold; -fx-text-fill: #46506B;" />
+        <FlowPane hgap="18" vgap="6" prefWrapLength="380">
+            <CheckBox fx:id="chkAccPanel" text="Panel Principal" />
+            <CheckBox fx:id="chkAccProductos" text="Productos" />
+            <CheckBox fx:id="chkAccVentas" text="Ventas" />
+            <CheckBox fx:id="chkAccReportes" text="Reportes" />
+            <CheckBox fx:id="chkAccUsuarios" text="Usuarios (clientes)" />
+            <CheckBox fx:id="chkAccConfiguracion" text="Configuración" />
+            <CheckBox fx:id="chkAccEditar" text="Puede editar y borrar" />
+        </FlowPane>
+        <Label styleClass="form-nota" wrapText="true"
+               text="Solo se muestra. Para cambiar lo que puede hacer un rol: Configuración > Roles." />
+    </VBox>
+
+    <Label fx:id="lblContrasena" styleClass="form-etiqueta" text="Contraseña (mínimo 6 caracteres)" style="-fx-padding: 8 0 0 0;" />
+    <CampoContrasena fx:id="campoContrasena" />
+
+    <Label fx:id="lblConfirmar" styleClass="form-etiqueta" text="Confirmar contraseña" style="-fx-padding: 8 0 0 0;" />
+    <CampoContrasena fx:id="campoConfirmar" />
+
+    <VBox fx:id="boxAutorizacion" styleClass="form-aviso" spacing="8">
+        <Label text="🔒 Autorización de un administrador" style="-fx-font-weight: bold; -fx-text-fill: #1F5FBF;" />
+        <Label styleClass="form-nota" wrapText="true"
+               text="Para crear un usuario nuevo, un Administrador debe escribir sus credenciales." />
+        <TextField fx:id="campoAdminUsuario" styleClass="form-campo" promptText="Usuario del administrador" />
+        <CampoContrasena fx:id="campoAdminContrasena" promptText="Contraseña del administrador" />
+    </VBox>
+
+    <Label fx:id="lblMensaje" styleClass="form-mensaje" text="" wrapText="true" />
+
+    <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding: 8 0 0 0;">
+        <Button styleClass="form-boton-texto" text="Cancelar" onAction="#cancelar" />
+        <Button styleClass="form-boton" text="Guardar" onAction="#guardar" defaultButton="true" />
+    </HBox>
+</VBox>

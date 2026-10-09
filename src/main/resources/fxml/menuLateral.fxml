@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="sgis.vista.MenuLateralVista"
+      styleClass="sidebar"
+      stylesheets="@../css/estilos.css">
+
+    <HBox styleClass="sidebar-marca" alignment="CENTER_LEFT" spacing="10">
+        <ImageView fitWidth="34" fitHeight="34" preserveRatio="true">
+            <image>
+                <Image url="@../images/icono_carrito.png" />
+            </image>
+        </ImageView>
+        <Label styleClass="sidebar-marca-titulo" text="Abasto La Barata" wrapText="true" maxWidth="150" />
+    </HBox>
+
+    <Button fx:id="btnPanel" styleClass="nav-item" text="Panel Principal" maxWidth="Infinity" onAction="#irAPanel">
+        <graphic>
+            <ImageView fitWidth="18" fitHeight="18" preserveRatio="true">
+                <image>
+                    <Image url="@../images/iconos/panel.png" />
+                </image>
+            </ImageView>
+        </graphic>
+    </Button>
+    <Button fx:id="btnProductos" styleClass="nav-item" text="Productos" maxWidth="Infinity" onAction="#irAProductos">
+        <graphic>
+            <ImageView fitWidth="18" fitHeight="18" preserveRatio="true">
+                <image>
+                    <Image url="@../images/iconos/productos.png" />
+                </image>
+            </ImageView>
+        </graphic>
+    </Button>
+    <Button fx:id="btnVentas" styleClass="nav-item" text="Ventas" maxWidth="Infinity" onAction="#irAVentas">
+        <graphic>
+            <ImageView fitWidth="18" fitHeight="18" preserveRatio="true">
+                <image>
+                    <Image url="@../images/iconos/ventas.png" />
+                </image>
+            </ImageView>
+        </graphic>
+    </Button>
+    <Button fx:id="btnReportes" styleClass="nav-item" text="Reportes" maxWidth="Infinity" onAction="#irAReportes">
+        <graphic>
+            <ImageView fitWidth="18" fitHeight="18" preserveRatio="true">
+                <image>
+                    <Image url="@../images/iconos/reportes.png" />
+                </image>
+            </ImageView>
+        </graphic>
+    </Button>
+    <Button fx:id="btnUsuarios" styleClass="nav-item" text="Usuarios" maxWidth="Infinity" onAction="#irAUsuarios">
+        <graphic>
+            <ImageView fitWidth="18" fitHeight="18" preserveRatio="true">
+                <image>
+                    <Image url="@../images/iconos/usuarios.png" />
+                </image>
+            </ImageView>
+        </graphic>
+    </Button>
+    <Button fx:id="btnConfiguracion" styleClass="nav-item" text="Configuración" maxWidth="Infinity" onAction="#irAConfiguracion">
+        <graphic>
+            <ImageView fitWidth="18" fitHeight="18" preserveRatio="true">
+                <image>
+                    <Image url="@../images/iconos/configuracion.png" />
+                </image>
+            </ImageView>
+        </graphic>
+    </Button>
+
+    <Region VBox.vgrow="ALWAYS" />
+
+    <Label fx:id="lblUsuarioActual" styleClass="sidebar-usuario" wrapText="true" text="" />
+    <Button fx:id="btnCerrarSesion" styleClass="nav-item" text="Cerrar sesión" maxWidth="Infinity" onAction="#cerrarSesion">
+        <graphic>
+            <ImageView fitWidth="18" fitHeight="18" preserveRatio="true">
+                <image>
+                    <Image url="@../images/iconos/salir.png" />
+                </image>
+            </ImageView>
+        </graphic>
+    </Button>
+
+    <HBox styleClass="sidebar-footer-box" alignment="CENTER_LEFT" spacing="8">
+        <ImageView fitHeight="26" preserveRatio="true">
+            <image>
+                <Image url="@../images/logo_atlas.png" />
+            </image>
+        </ImageView>
+        <Label styleClass="sidebar-footer" text="ATLAS CORPORATION" />
+    </HBox>
+</VBox>

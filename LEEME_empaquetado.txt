@@ -1,0 +1,98 @@
+ADMINISTRADOR DE VENTAS - Cómo crear la aplicación de escritorio
+==================================================================
+
+Qué hace empaquetar.bat
+-----------------------
+Compila el proyecto, crea la aplicación "Administrador de ventas" (con el ícono del
+carrito) y deja un acceso directo en el Escritorio. La aplicación se instala en
+%LOCALAPPDATA%\AdministradorDeVentas, así que después puedes borrar la carpeta del
+proyecto sin que deje de funcionar.
+
+Requisitos (una sola vez)
+-------------------------
+1. Un JDK (no solo el JRE) versión 17 o superior. Ya tienes JDK 19 y 24 instalados.
+2. Maven. Si tienes NetBeans, el script usa el Maven que trae NetBeans automáticamente.
+3. Internet la primera vez (Maven descarga las librerías, incluida la del PDF).
+
+Pasos
+-----
+1. Descomprime el proyecto completo (la carpeta que contiene pom.xml).
+2. Haz doble clic en  empaquetar.bat  y espera a que diga "LISTO".
+3. Busca "Administrador de ventas" en el Escritorio y ábrelo.
+
+Antes de abrir la aplicación
+----------------------------
+- Inicia MySQL en el panel de XAMPP (la base de datos sigue siendo local por ahora).
+- Si aún no lo hiciste, ejecuta en phpMyAdmin (pestaña SQL) los scripts de la carpeta base_de_datos, cada uno UNA sola vez:
+    1) actualizar_metodo_pago.sql
+    2) actualizar_usuario_en_ventas.sql   (guarda quién registró cada venta)
+    3) actualizar_roles.sql               (deja solo los roles Administrador y Administrador de inventario)
+    4) actualizar_estado_comprobante.sql  (agrega el estado "completado" al comprobante de cada venta)
+    5) actualizar_contrasena_visible.sql  (permite al Administrador ver contraseñas con el ojo)
+    6) crear_auditoria.sql                (crea el registro de "quién tocó el sistema")
+    7) crear_roles.sql                    (roles configurables: crear roles nuevos desde Configuración)
+    8) proteger_usuario_admin.sql         (usuario admin protegido: nadie puede editarlo, desactivarlo ni eliminarlo)
+  Si alguno dice que la columna ya existe, es porque ya lo habías ejecutado.
+
+Si algo falla
+-------------
+- "no se encontro Maven": abre empaquetar.bat con el Bloc de notas y escribe la ruta
+  de mvn.cmd en la línea  set "MVN_MANUAL="  del inicio.
+- La aplicación no abre: en empaquetar.bat, dentro del comando de jpackage, agrega
+  --win-console  para que se abra una ventana negra con el mensaje de error, y
+  vuelve a ejecutarlo.
+- Para actualizar la aplicación después de cambios en el código, vuelve a ejecutar
+  empaquetar.bat (reemplaza la versión instalada).
+
+Datos que guarda la aplicación
+------------------------------
+- Respaldos de la base de datos: carpeta SGIS_Respaldos dentro de tu carpeta personal
+  (C:\Users\TU_USUARIO\SGIS_Respaldos). Se crea uno cada hora mientras la aplicación está
+  abierta y se conservan los 168 más recientes (una semana).
+
+Llave de las contraseñas visibles
+---------------------------------
+Las contraseñas que el Administrador puede ver se guardan cifradas, y la llave para descifrarlas
+está en  C:\Users\TU_USUARIO\.sgis\clave.key  (se crea sola). No la compartas ni la borres:
+sin ese archivo (por ejemplo, si llevas la base de datos a otro computador) esas contraseñas
+dejan de poder verse y hay que generar una nueva con el botón Clave.
+
+Estructura del código (Source Packages)
+---------------------------------------
+sgis              → App y Main (arranque de la aplicación)
+sgis.controlador  → controladores (lógica de cada módulo)
+sgis.db           → acceso a la base de datos (conexión y consultas, antes "dao")
+sgis.modelo       → clases de datos (Producto, Venta, Usuario...)
+sgis.servicio     → servicios (comprobantes, facturas, correo, respaldos, auditoría)
+sgis.util         → utilidades (permisos, formatos, seguridad...)
+sgis.vista        → pantallas y su lógica
+
+IMPORTANTE al actualizar desde una versión anterior: borra la carpeta del proyecto viejo (o al
+menos src/main/java/com y la carpeta target) antes de descomprimir esta, y luego haz
+"Clean and Build" en NetBeans. Si quedan los archivos de la estructura anterior (com/atlascorp/...)
+junto a los nuevos, habrá clases duplicadas.
+
+Uso diario (con la aplicación ya instalada en el Escritorio)
+------------------------------------------------------------
+1. Abre el Panel de Control de XAMPP y pulsa Start en MySQL.
+   Apache NO hace falta: solo se usa para entrar a phpMyAdmin.
+2. Doble clic en "Administrador de ventas" del Escritorio. No hay que compilar nada.
+Si MySQL está apagado, el inicio de sesión lo avisa: "Abre XAMPP, pulsa Start en MySQL...".
+
+Opcional, para no tener que abrir XAMPP nunca más:
+En el Panel de Control de XAMPP, en la fila de MySQL, pulsa la X de la columna "Service" para
+instalarlo como servicio de Windows (pide permisos de administrador). Así MySQL se enciende solo
+cuando prende el computador y bastará con abrir la aplicación.
+
+Si la aplicación no abre o se cierra sola
+-----------------------------------------
+1. Abre el archivo de registro:  C:\Users\TU_USUARIO\.sgis\aplicacion.log
+   (ahí queda escrito cualquier error; mándalo tal cual para poder ayudarte).
+2. Vuelve a crear la aplicación con una de estas opciones (desde una ventana de "Símbolo del
+   sistema" abierta en la carpeta del proyecto):
+       empaquetar.bat completo      incluye todo Java (descarta que falte algún módulo)
+       empaquetar.bat consola       abre con una ventana negra que muestra los errores
+3. Windows puede mostrar "Windows protegió su PC" la primera vez, porque la aplicación no está
+   firmada digitalmente: pulsa "Más información" y luego "Ejecutar de todas formas".
+
+Para actualizar la aplicación después de cambios en el código: vuelve a ejecutar empaquetar.bat.

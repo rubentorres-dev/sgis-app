@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import sgis.vista.CampoContrasena?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="sgis.vista.LoginVista"
+           styleClass="login-fondo"
+           stylesheets="@../css/estilos.css">
+
+    <VBox alignment="CENTER" spacing="22">
+
+        <VBox fx:id="tarjeta" styleClass="login-tarjeta" alignment="CENTER" spacing="14"
+              prefWidth="400" minWidth="400" maxWidth="400">
+
+            <ImageView fitWidth="68" fitHeight="68" preserveRatio="true">
+                <image>
+                    <Image url="@../images/icono_carrito.png" />
+                </image>
+            </ImageView>
+            <Label styleClass="login-titulo" text="Administrador de ventas" />
+            <Label styleClass="login-subtitulo" text="Inicia sesión para continuar" />
+
+            <TextField fx:id="campoUsuario" promptText="Usuario" styleClass="login-campo" maxWidth="Infinity" />
+            <CampoContrasena fx:id="campoContrasena" promptText="Contraseña" maxWidth="Infinity" />
+
+            <HBox alignment="CENTER_RIGHT">
+                <Button text="¿Olvidaste tu contraseña?" styleClass="login-enlace" onAction="#abrirCambiarContrasena" />
+            </HBox>
+
+            <Label fx:id="lblMensaje" styleClass="login-mensaje" wrapText="true" maxWidth="Infinity" />
+
+            <Button text="Iniciar sesión" styleClass="login-boton" maxWidth="Infinity"
+                    defaultButton="true" onAction="#ingresar" />
+            <Button text="¿Nuevo usuario? Crear cuenta" styleClass="login-enlace" onAction="#abrirNuevoUsuario" />
+        </VBox>
+
+        <HBox alignment="CENTER" spacing="8">
+            <ImageView fitHeight="22" preserveRatio="true">
+                <image>
+                    <Image url="@../images/logo_atlas.png" />
+                </image>
+            </ImageView>
+            <Label styleClass="login-pie" text="ATLAS CORPORATION  ·  Contraseñas cifradas y acceso protegido contra intentos repetidos" />
+        </HBox>
+    </VBox>
+</StackPane>

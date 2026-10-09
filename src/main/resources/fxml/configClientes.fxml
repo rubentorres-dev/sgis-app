@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="sgis.vista.ConfigClientesVista"
+      stylesheets="@../css/estilos.css"
+      spacing="12">
+    <padding>
+        <Insets top="16" right="18" bottom="16" left="18" />
+    </padding>
+
+    <Label text="Personas registradas como clientes (compran o piden facturación). Solo se pueden eliminar los que aún no tienen ventas."
+           style="-fx-text-fill: #78809A;" wrapText="true" />
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <TextField fx:id="campoBusqueda" promptText="Buscar por nombre o correo..." prefWidth="340" />
+        <Label fx:id="lblResultado" text="" />
+    </HBox>
+
+    <TableView fx:id="tablaClientes" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colId" text="N°" prefWidth="70" />
+            <TableColumn fx:id="colNombre" text="Nombre" prefWidth="260" />
+            <TableColumn fx:id="colCorreo" text="Correo electrónico" prefWidth="300" />
+            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="220" />
+        </columns>
+    </TableView>
+
+    <Label fx:id="lblMensaje" text="" wrapText="true" />
+</VBox>

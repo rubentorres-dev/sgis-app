@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="sgis.vista.ConfigRolesVista"
+      stylesheets="@../css/estilos.css"
+      spacing="12">
+    <padding>
+        <Insets top="16" right="18" bottom="16" left="18" />
+    </padding>
+
+    <Label text="Aquí puedes ajustar las pantallas a las que tiene acceso un rol o eliminarlo. Para crear uno nuevo también puedes usar la opción «Nuevo rol» al final de la lista de roles de un usuario. El rol Administrador es del sistema: se puede consultar, pero no se desactiva ni se elimina. Un rol desactivado no se puede asignar y sus usuarios no pueden iniciar sesión. Un rol solo se elimina si ningún usuario lo tiene."
+           style="-fx-text-fill: #78809A;" wrapText="true" />
+
+    <HBox alignment="CENTER_RIGHT">
+        <Region HBox.hgrow="ALWAYS" />
+        <Button fx:id="btnNuevoRol" styleClass="boton-primario" text="+ Nuevo rol" onAction="#nuevoRol" />
+    </HBox>
+
+    <TableView fx:id="tablaRoles" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colNombre" text="Rol" prefWidth="190" />
+            <TableColumn fx:id="colPantallas" text="Acceso (qué puede ver)" prefWidth="260" />
+            <TableColumn fx:id="colEditar" text="Editar y borrar" prefWidth="100" />
+            <TableColumn fx:id="colUsuarios" text="Usuarios" prefWidth="70" />
+            <TableColumn fx:id="colEstado" text="Estado" prefWidth="90" />
+            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="330" />
+        </columns>
+    </TableView>
+
+    <Label fx:id="lblMensaje" text="" wrapText="true" />
+</VBox>

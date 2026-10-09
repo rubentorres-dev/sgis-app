@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.Region?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="sgis.vista.UsuariosVista"
+            stylesheets="@../css/estilos.css">
+
+    <left>
+        <fx:include source="menuLateral.fxml" />
+    </left>
+
+    <center>
+        <VBox>
+            <HBox styleClass="topbar" spacing="10">
+                <Label styleClass="topbar-title" text="Usuarios" />
+            </HBox>
+
+            <VBox spacing="16">
+                <padding>
+                    <Insets top="20" right="24" bottom="20" left="24" />
+                </padding>
+
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <TextField fx:id="campoBusqueda" promptText="Buscar por nombre o correo..." prefWidth="340" />
+                    <Label fx:id="lblResultado" text="" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button styleClass="boton-primario" text="+ Registrar usuario" onAction="#abrirFormularioNuevo" />
+                </HBox>
+
+                <VBox>
+                    <HBox styleClass="section-header">
+                        <Label styleClass="section-header-label" text="Usuarios registrados (clientes y facturación)" />
+                    </HBox>
+                    <TableView fx:id="tablaUsuarios" prefHeight="420">
+                        <columns>
+                            <TableColumn fx:id="colId" text="N°" prefWidth="70" />
+                            <TableColumn fx:id="colNombre" text="Nombre" prefWidth="280" />
+                            <TableColumn fx:id="colCorreo" text="Correo electrónico" prefWidth="320" />
+                            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="140" />
+                        </columns>
+                    </TableView>
+                </VBox>
+
+                <Label fx:id="lblMensaje" text="" />
+            </VBox>
+        </VBox>
+    </center>
+</BorderPane>

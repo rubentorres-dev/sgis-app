@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            stylesheets="@../css/estilos.css">
+
+    <left>
+        <fx:include source="menuLateral.fxml" />
+    </left>
+
+    <center>
+        <BorderPane>
+            <top>
+                <HBox styleClass="topbar" spacing="10">
+                    <Label styleClass="topbar-title" text="Configuración (solo Administrador)" />
+                </HBox>
+            </top>
+            <center>
+                <TabPane tabClosingPolicy="UNAVAILABLE">
+                    <tabs>
+                        <Tab text="Usuarios del sistema">
+                            <content>
+                                <fx:include source="configUsuarios.fxml" />
+                            </content>
+                        </Tab>
+                        <Tab text="Roles">
+                            <content>
+                                <fx:include source="configRoles.fxml" />
+                            </content>
+                        </Tab>
+                        <Tab text="Clientes">
+                            <content>
+                                <fx:include source="configClientes.fxml" />
+                            </content>
+                        </Tab>
+                        <Tab text="Productos">
+                            <content>
+                                <fx:include source="configProductos.fxml" />
+                            </content>
+                        </Tab>
+                        <Tab text="Categorías">
+                            <content>
+                                <fx:include source="configCategorias.fxml" />
+                            </content>
+                        </Tab>
+                        <Tab text="Reportes y auditoría">
+                            <content>
+                                <fx:include source="reportesContenido.fxml" />
+                            </content>
+                        </Tab>
+                    </tabs>
+                </TabPane>
+            </center>
+        </BorderPane>
+    </center>
+</BorderPane>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="sgis.vista.ComprobantesVista"
+      styleClass="form-fondo"
+      stylesheets="@../css/estilos.css"
+      spacing="10" prefWidth="1000" prefHeight="620">
+    <padding>
+        <Insets top="26" right="30" bottom="22" left="30" />
+    </padding>
+
+    <Label styleClass="form-titulo" text="Comprobantes de venta" />
+    <Label styleClass="form-subtitulo"
+           text="Busca una venta para ver su comprobante o volver a descargarlo, por ejemplo si el cliente lo necesita." />
+
+    <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding: 6 0 0 0;">
+        <TextField fx:id="campoBusqueda" styleClass="form-campo" prefWidth="540"
+                   promptText="Buscar por N°, cliente, correo, método de pago o fecha (dd/mm/aaaa)..." />
+        <Label fx:id="lblResultado" styleClass="form-nota" />
+    </HBox>
+
+    <HBox spacing="16" VBox.vgrow="ALWAYS">
+        <TableView fx:id="tablaVentas" prefWidth="540" minWidth="480">
+            <columns>
+                <TableColumn fx:id="colId" text="N°" prefWidth="55" />
+                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="130" />
+                <TableColumn fx:id="colCliente" text="Cliente" prefWidth="150" />
+                <TableColumn fx:id="colTotal" text="Total" prefWidth="95" />
+                <TableColumn fx:id="colEstado" text="Comprobante" prefWidth="105" />
+            </columns>
+        </TableView>
+
+        <VBox spacing="8" HBox.hgrow="ALWAYS">
+            <Label styleClass="form-etiqueta" text="Comprobante" />
+            <TextArea fx:id="areaComprobante" editable="false" VBox.vgrow="ALWAYS"
+                      promptText="Selecciona una venta de la lista para ver su comprobante."
+                      style="-fx-font-family: 'Consolas', 'Courier New', monospace; -fx-font-size: 12;" />
+            <Label fx:id="lblEstadoDetalle" styleClass="form-nota" wrapText="true" />
+            <Button fx:id="btnDescargar" styleClass="form-boton" maxWidth="Infinity" disable="true"
+                    text="Descargar factura (PDF)" onAction="#descargarFactura" />
+        </VBox>
+    </HBox>
+
+    <Label fx:id="lblMensaje" styleClass="form-mensaje" wrapText="true" />
+
+    <HBox alignment="CENTER_RIGHT">
+        <Button styleClass="form-boton-texto" text="Cerrar" onAction="#cerrar" />
+    </HBox>
+</VBox>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="sgis.vista.RolFormVista"
+      styleClass="form-fondo"
+      stylesheets="@../css/estilos.css"
+      spacing="6" prefWidth="460">
+    <padding>
+        <Insets top="28" right="32" bottom="26" left="32" />
+    </padding>
+
+    <Label fx:id="lblTitulo" styleClass="form-titulo" text="Nuevo rol" />
+    <Label styleClass="form-subtitulo" text="Marca a qué pantallas tendrá acceso este rol." />
+
+    <Label styleClass="form-etiqueta" text="Nombre del rol" style="-fx-padding: 12 0 0 0;" />
+    <TextField fx:id="campoNombre" styleClass="form-campo" promptText="Ej. Cajero" />
+
+    <Label styleClass="form-etiqueta" text="Pantallas a las que puede entrar" style="-fx-padding: 8 0 0 0;" />
+    <VBox styleClass="form-aviso" spacing="8">
+        <CheckBox text="Panel Principal (siempre incluido)" selected="true" disable="true" />
+        <CheckBox fx:id="chkProductos" text="Productos" />
+        <CheckBox fx:id="chkVentas" text="Ventas" />
+        <CheckBox fx:id="chkReportes" text="Reportes" />
+        <CheckBox fx:id="chkUsuarios" text="Usuarios (clientes)" />
+    </VBox>
+    <Label styleClass="form-nota" wrapText="true"
+           text="Configuración es solo para el Administrador y no se puede dar a otros roles." />
+
+    <CheckBox fx:id="chkEditar" text="Puede editar y borrar (productos, clientes...)" style="-fx-padding: 8 0 0 0;" />
+
+    <VBox fx:id="boxNotaSistema" styleClass="form-aviso" visible="false" managed="false">
+        <Label styleClass="form-nota" wrapText="true"
+               text="🔒 El Administrador siempre tiene acceso total, incluida Configuración, y no se puede cambiar, desactivar ni eliminar: sin este rol nadie podría administrar el sistema." />
+    </VBox>
+
+    <Label fx:id="lblMensaje" styleClass="form-mensaje" text="" wrapText="true" />
+
+    <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding: 8 0 0 0;">
+        <Button fx:id="btnCancelar" styleClass="form-boton-texto" text="Cancelar" onAction="#cancelar" />
+        <Button fx:id="btnGuardar" styleClass="form-boton" text="Guardar" onAction="#guardar" defaultButton="true" />
+    </HBox>
+</VBox>

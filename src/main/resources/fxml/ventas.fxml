@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.Region?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="sgis.vista.VentasVista"
+            stylesheets="@../css/estilos.css">
+
+    <left>
+        <fx:include source="menuLateral.fxml" />
+    </left>
+
+    <center>
+        <VBox>
+            <HBox styleClass="topbar" spacing="10">
+                <Label styleClass="topbar-title" text="Ventas" />
+            </HBox>
+
+            <HBox spacing="20">
+                <padding>
+                    <Insets top="20" right="24" bottom="20" left="24" />
+                </padding>
+
+                <!-- ===== COLUMNA IZQUIERDA: carrito ===== -->
+                <VBox spacing="14" prefWidth="620">
+                    <HBox styleClass="section-header" alignment="CENTER_LEFT">
+                        <Label styleClass="section-header-label" text="Nueva Venta" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button styleClass="boton-secundario" text="🔎 Buscar comprobante"
+                                style="-fx-padding: 3 10 3 10;" onAction="#buscarComprobante" />
+                    </HBox>
+
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <ComboBox fx:id="comboProducto" prefWidth="280" promptText="Selecciona un producto" />
+                        <Label text="Cant." />
+                        <TextField fx:id="campoCantidadCarrito" prefWidth="60" text="1" />
+                        <Button styleClass="boton-primario" text="+ Agregar" onAction="#agregarAlCarrito" />
+                    </HBox>
+
+                    <TableView fx:id="tablaCarrito" prefHeight="240">
+                        <columns>
+                            <TableColumn fx:id="colProducto" text="Producto" prefWidth="220" />
+                            <TableColumn fx:id="colPrecioUnitario" text="Precio Unit." prefWidth="90" />
+                            <TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="80" />
+                            <TableColumn fx:id="colSubtotal" text="Subtotal" prefWidth="90" />
+                            <TableColumn fx:id="colAccionesCarrito" text="" prefWidth="90" />
+                        </columns>
+                    </TableView>
+
+                    <Label fx:id="lblMensaje" text="" wrapText="true" />
+                    <TextArea fx:id="areaComprobante" prefRowCount="12" editable="false" />
+                </VBox>
+
+                <!-- ===== COLUMNA DERECHA: cliente, pago y factura ===== -->
+                <VBox styleClass="kpi-card" spacing="8" prefWidth="320" minWidth="320" maxWidth="320">
+                    <Label text="Datos del Cliente" styleClass="topbar-title" />
+                    <Label text="Nombre del cliente" />
+                    <TextField fx:id="campoNombreCliente" promptText="Escribe para buscar clientes registrados" />
+                    <Label text="Correo electrónico" />
+                    <TextField fx:id="campoCorreoCliente" promptText="correo@ejemplo.com" />
+                    <Label text="Método de pago" />
+                    <ComboBox fx:id="comboMetodoPago" maxWidth="Infinity" />
+
+                    <Region VBox.vgrow="ALWAYS" />
+
+                    <Label text="Total a pagar" style="-fx-font-size: 13; -fx-text-fill: #78809A;" />
+                    <Label fx:id="lblTotal" text="0" style="-fx-font-size: 26; -fx-font-weight: bold; -fx-text-fill: #14213D;" />
+
+                    <Button styleClass="boton-primario" maxWidth="Infinity"
+                            text="Confirmar Venta y Enviar Comprobante" onAction="#confirmarVenta" />
+
+                    <VBox styleClass="aviso-factura" spacing="4">
+                        <Label styleClass="aviso-factura-titulo" text="🧾 Factura electrónica" />
+                        <Label styleClass="aviso-factura-texto" wrapText="true"
+                               text="Descarga la factura de esta venta en PDF para entregársela al cliente. Es un documento informativo: no reemplaza la factura electrónica con validez ante la DIAN." />
+                    </VBox>
+                    <Button fx:id="btnFactura" styleClass="boton-secundario" maxWidth="Infinity"
+                            text="Generar factura (PDF)" onAction="#generarFactura" />
+                </VBox>
+            </HBox>
+        </VBox>
+    </center>
+</BorderPane>

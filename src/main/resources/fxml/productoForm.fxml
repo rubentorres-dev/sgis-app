@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="sgis.vista.ProductoFormVista"
+      styleClass="form-fondo"
+      stylesheets="@../css/estilos.css"
+      spacing="6" prefWidth="440">
+    <padding>
+        <Insets top="28" right="32" bottom="26" left="32" />
+    </padding>
+
+    <Label fx:id="lblTitulo" styleClass="form-titulo" text="Nuevo producto" />
+    <Label styleClass="form-subtitulo" text="Completa los datos del producto." />
+
+    <Label styleClass="form-etiqueta" text="Nombre" style="-fx-padding: 12 0 0 0;" />
+    <TextField fx:id="campoNombre" styleClass="form-campo" promptText="Ej. Arroz Diana 1 kg" />
+
+    <Label styleClass="form-etiqueta" text="Descripción" style="-fx-padding: 8 0 0 0;" />
+    <TextField fx:id="campoDescripcion" styleClass="form-campo" promptText="Opcional" />
+
+    <Label styleClass="form-etiqueta" text="Categoría" style="-fx-padding: 8 0 0 0;" />
+    <ComboBox fx:id="comboCategoria" styleClass="form-combo" maxWidth="Infinity" promptText="Selecciona una categoría" />
+
+    <HBox spacing="14" style="-fx-padding: 8 0 0 0;">
+        <VBox spacing="6" HBox.hgrow="ALWAYS">
+            <Label styleClass="form-etiqueta" text="Precio (pesos)" />
+            <TextField fx:id="campoPrecio" styleClass="form-campo" promptText="5500" />
+        </VBox>
+        <VBox spacing="6" HBox.hgrow="ALWAYS">
+            <Label styleClass="form-etiqueta" text="Cantidad disponible" />
+            <TextField fx:id="campoCantidad" styleClass="form-campo" promptText="0" />
+        </VBox>
+    </HBox>
+
+    <Label styleClass="form-etiqueta" text="Estado" style="-fx-padding: 8 0 0 0;" />
+    <ComboBox fx:id="comboEstado" styleClass="form-combo" maxWidth="Infinity" />
+
+    <Label styleClass="form-nota" wrapText="true"
+           text="Si cambias la cantidad de un producto existente, el sistema registra el movimiento (entrada o salida) a tu nombre." />
+
+    <Label fx:id="lblMensaje" styleClass="form-mensaje" text="" wrapText="true" />
+
+    <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding: 8 0 0 0;">
+        <Button styleClass="form-boton-texto" text="Cancelar" onAction="#cancelar" />
+        <Button styleClass="form-boton" text="Guardar" onAction="#guardar" defaultButton="true" />
+    </HBox>
+</VBox>

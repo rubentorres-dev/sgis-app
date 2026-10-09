@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import sgis.vista.CampoContrasena?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="sgis.vista.CambiarContrasenaVista"
+      styleClass="form-fondo"
+      stylesheets="@../css/estilos.css"
+      spacing="6" prefWidth="420">
+    <padding>
+        <Insets top="28" right="32" bottom="26" left="32" />
+    </padding>
+
+    <Label styleClass="form-titulo" text="Cambiar contraseña" />
+
+    <!-- ===== Formulario normal ===== -->
+    <VBox fx:id="boxFormulario" spacing="6">
+        <Label styleClass="form-subtitulo" text="Para cambiarla necesitas conocer la contraseña actual." />
+
+        <Label styleClass="form-etiqueta" text="Usuario" style="-fx-padding: 12 0 0 0;" />
+        <TextField fx:id="campoUsuario" styleClass="form-campo" />
+
+        <Label styleClass="form-etiqueta" text="Contraseña actual" style="-fx-padding: 8 0 0 0;" />
+        <CampoContrasena fx:id="campoActual" />
+
+        <Label styleClass="form-etiqueta" text="Contraseña nueva (mínimo 6 caracteres)" style="-fx-padding: 8 0 0 0;" />
+        <CampoContrasena fx:id="campoNueva" />
+
+        <Label styleClass="form-etiqueta" text="Confirmar contraseña nueva" style="-fx-padding: 8 0 0 0;" />
+        <CampoContrasena fx:id="campoConfirmar" />
+
+        <Label fx:id="lblMensaje" styleClass="form-mensaje" text="" wrapText="true" />
+
+        <VBox fx:id="boxAviso" styleClass="form-aviso" spacing="4" visible="false" managed="false">
+            <Label text="🔒 ¿No recuerdas tu contraseña?" style="-fx-font-weight: bold; -fx-text-fill: #1F5FBF;" />
+            <Label styleClass="form-nota" wrapText="true"
+                   text="Por seguridad, solo un administrador puede restablecer una contraseña olvidada. Comunícate con el administrador." />
+        </VBox>
+
+        <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 8 0 0 0;">
+            <Button styleClass="form-boton-texto" text="No recuerdo mi contraseña" onAction="#noRecuerdo" />
+            <HBox HBox.hgrow="ALWAYS" />
+            <Button styleClass="form-boton-texto" text="Cancelar" onAction="#cancelar" />
+            <Button styleClass="form-boton" text="Cambiar" onAction="#cambiar" defaultButton="true" />
+        </HBox>
+    </VBox>
+
+    <!-- ===== Intentos agotados: solo el anuncio, sin formulario ===== -->
+    <VBox fx:id="boxBloqueado" spacing="14" visible="false" managed="false">
+        <VBox styleClass="form-aviso" spacing="6">
+            <Label text="🔒 Comunícate con el administrador" style="-fx-font-weight: bold; -fx-font-size: 15; -fx-text-fill: #1F5FBF;" />
+            <Label styleClass="form-nota" wrapText="true"
+                   text="Se agotaron los intentos de acceso, por eso ya no se puede cambiar la contraseña desde aquí. El administrador puede restablecerla desde Configuración." />
+        </VBox>
+        <HBox alignment="CENTER_RIGHT">
+            <Button styleClass="form-boton" text="Entendido" onAction="#cancelar" defaultButton="true" />
+        </HBox>
+    </VBox>
+</VBox>

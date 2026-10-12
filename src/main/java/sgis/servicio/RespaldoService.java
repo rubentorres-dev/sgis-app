@@ -41,7 +41,7 @@ public class RespaldoService {
 
     // En orden de dependencia (primero las tablas que otras necesitan).
     private static final List<String> TABLAS = List.of(
-            "CATEGORIA", "USUARIO", "PRODUCTO", "MOVIMIENTO", "CLIENTE", "VENTA", "DETALLE_VENTA", "AUDITORIA");
+            "CATEGORIA", "ROL", "USUARIO", "PRODUCTO", "MOVIMIENTO", "CLIENTE", "VENTA", "DETALLE_VENTA", "AUDITORIA");
 
     private static final Path CARPETA = Paths.get(System.getProperty("user.home"), "SGIS_Respaldos");
     private static final String PREFIJO = "respaldo_sgis_";

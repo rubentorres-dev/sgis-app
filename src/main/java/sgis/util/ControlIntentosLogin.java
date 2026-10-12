@@ -58,6 +58,12 @@ public class ControlIntentosLogin {
         return MAX_INTENTOS - total;
     }
 
+    /** Borra todos los conteos y bloqueos temporales (se usa cuando un administrador desbloquea el sistema). */
+    public static synchronized void reiniciarTodo() {
+        fallos.clear();
+        bloqueadoHasta.clear();
+    }
+
     public static synchronized void registrarExito(String usuario) {
         fallos.remove(clave(usuario));
         bloqueadoHasta.remove(clave(usuario));

@@ -36,6 +36,11 @@
                 <Button text="¿Olvidaste tu contraseña?" styleClass="login-enlace" onAction="#abrirCambiarContrasena" />
             </HBox>
 
+            <Label fx:id="lblAvisoOlvido" styleClass="login-subtitulo" wrapText="true" maxWidth="Infinity"
+                   alignment="CENTER" textAlignment="CENTER"
+                   style="-fx-font-size: 12px;"
+                   text="Si olvidaste tu contraseña, comunícate con un administrador para desbloquear la cuenta y tener acceso al sistema." />
+
             <Label fx:id="lblMensaje" styleClass="login-mensaje" wrapText="true" maxWidth="Infinity" />
 
             <Button text="Iniciar sesión" styleClass="login-boton" maxWidth="Infinity"

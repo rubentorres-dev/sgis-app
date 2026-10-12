@@ -29,10 +29,12 @@ import java.io.InputStream;
 public class App extends Application {
 
     private static final String NOMBRE_APP = "Administrador de ventas";
+    /** Versión que se ve en la barra de título (v1.6 = correcciones de la revisión QA). */
+    private static final String VERSION = "1.6";
 
     @Override
     public void start(Stage stage) {
-        stage.setTitle(NOMBRE_APP);
+        stage.setTitle(NOMBRE_APP + " · v" + VERSION);
 
         // Ícono de la ventana (carrito de compras)
         try (InputStream icono = getClass().getResourceAsStream("/images/icono_carrito.png")) {

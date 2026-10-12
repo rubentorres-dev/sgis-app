@@ -39,6 +39,10 @@ public class ProductoController {
 
     /** @return null si todo salió bien, o un mensaje de error para mostrar en pantalla. */
     public String registrarProducto(Producto p) {
+        String invalido = validar(p);
+        if (invalido != null) {
+            return invalido;
+        }
         try {
             productoDAO.registrarProducto(p, idUsuarioActual());
             AuditoriaService.registrar(Sesion.getUsuarioActual(), "Creó producto",
@@ -51,6 +55,10 @@ public class ProductoController {
 
     /** @return null si todo salió bien, o un mensaje de error para mostrar en pantalla. */
     public String actualizarProducto(Producto p) {
+        String invalido = validar(p);
+        if (invalido != null) {
+            return invalido;
+        }
         try {
             productoDAO.actualizarProducto(p, idUsuarioActual());
             AuditoriaService.registrar(Sesion.getUsuarioActual(), "Editó producto",
@@ -66,10 +74,43 @@ public class ProductoController {
     public String desactivarProducto(int idProducto) {
         try {
             productoDAO.desactivarProducto(idProducto);
+            AuditoriaService.registrar(Sesion.getUsuarioActual(), "Desactivó producto", "Producto n.º " + idProducto);
             return null;
         } catch (SQLException e) {
             return "Error al desactivar el producto: " + e.getMessage();
         }
+    }
+
+    private static final int LARGO_MAXIMO_NOMBRE = 150;
+    private static final int LARGO_MAXIMO_DESCRIPCION = 255;
+    private static final double PRECIO_MAXIMO = 99_999_999.99; // el límite de la columna DECIMAL(10,2)
+
+    /** Reglas del producto (la pantalla las comparte): nombre, precio y cantidad deben tener sentido. */
+    private String validar(Producto p) {
+        if (p == null) {
+            return "Faltan los datos del producto.";
+        }
+        String nombre = p.getNombre() == null ? "" : p.getNombre().trim();
+        if (nombre.isEmpty()) {
+            return "El nombre es obligatorio.";
+        }
+        if (nombre.length() > LARGO_MAXIMO_NOMBRE) {
+            return "El nombre no puede tener más de " + LARGO_MAXIMO_NOMBRE + " caracteres.";
+        }
+        if (p.getDescripcion() != null && p.getDescripcion().length() > LARGO_MAXIMO_DESCRIPCION) {
+            return "La descripción no puede tener más de " + LARGO_MAXIMO_DESCRIPCION + " caracteres.";
+        }
+        if (Double.isNaN(p.getPrecio()) || Double.isInfinite(p.getPrecio()) || p.getPrecio() <= 0) {
+            return "El precio debe ser un número mayor que 0.";
+        }
+        if (p.getPrecio() > PRECIO_MAXIMO) {
+            return "El precio no puede superar " + FormatoMoneda.formatear(PRECIO_MAXIMO) + ".";
+        }
+        if (p.getCantidadDisponible() < 0) {
+            return "La cantidad no puede ser negativa.";
+        }
+        p.setNombre(nombre); // se guarda sin espacios de más
+        return null;
     }
 
     /** Usuario que inició sesión (para registrar quién hizo cada cambio de existencias). */

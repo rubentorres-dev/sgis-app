@@ -22,6 +22,9 @@ public class MovimientoController {
      * @return null si todo salió bien, o un mensaje de error para mostrar en pantalla.
      */
     public String registrarEntrada(int idProducto, int cantidad, int idUsuario) {
+        if (cantidad <= 0) {
+            return "La cantidad debe ser mayor que 0.";
+        }
         try {
             movimientoDAO.registrarEntrada(idProducto, cantidad, idUsuario);
             return null;
@@ -35,6 +38,9 @@ public class MovimientoController {
      * @return null si todo salió bien, o un mensaje de error para mostrar en pantalla.
      */
     public String registrarSalida(int idProducto, int cantidad, int idUsuario) {
+        if (cantidad <= 0) {
+            return "La cantidad debe ser mayor que 0.";
+        }
         try {
             movimientoDAO.registrarSalida(idProducto, cantidad, idUsuario);
             return null;

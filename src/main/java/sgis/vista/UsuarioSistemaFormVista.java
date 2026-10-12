@@ -167,10 +167,29 @@ public class UsuarioSistemaFormVista implements Initializable {
         }
 
         if (error == null) {
+            // Un usuario nuevo recibe su código de recuperación de 6 dígitos: se muestra al crearlo.
+            boolean esNuevo = usuarioAEditar == null;
+            String codigo = esNuevo ? usuarioController.codigoDelUltimoUsuarioCreado() : null;
+            String problemaCodigo = esNuevo ? usuarioController.problemaCodigoRecuperacion() : null;
+            String nombreNuevo = nombre == null ? "" : nombre.trim();
+
             if (alGuardar != null) {
                 alGuardar.run();
             }
             cerrarVentana();
+
+            if (codigo != null) {
+                if (requiereAutorizacion) {
+                    // Desde el inicio de sesión: quien lo crea es la propia persona.
+                    CodigoRecuperacionVista.mostrar(codigo);
+                } else {
+                    // Lo crea un Administrador para otra persona: se le entrega ese código.
+                    CodigoRecuperacionVista.mostrar(codigo, "Código de " + nombreNuevo,
+                            "Entrégaselo para que pueda recuperar su acceso.");
+                }
+            } else if (problemaCodigo != null) {
+                Dialogos.informar("El usuario se creó, pero no se pudo generar su código de recuperación.\n\n" + problemaCodigo);
+            }
         } else {
             mostrarError(error);
         }

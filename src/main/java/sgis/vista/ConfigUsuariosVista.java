@@ -3,6 +3,7 @@ package sgis.vista;
 import sgis.controlador.UsuarioController;
 import sgis.modelo.Usuario;
 import sgis.util.PasswordUtil;
+import sgis.util.Permisos;
 import sgis.util.Sesion;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -23,6 +24,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -31,8 +33,10 @@ import javafx.stage.Stage;
 
 import java.net.URL;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.ResourceBundle;
 
 /**
@@ -50,6 +54,13 @@ public class ConfigUsuariosVista implements Initializable {
     private final Image imagenOjo = new Image(getClass().getResource("/images/iconos/ojo.png").toExternalForm());
     private final Image imagenOjoTachado = new Image(getClass().getResource("/images/iconos/ojo_tachado.png").toExternalForm());
 
+    /** Códigos de recuperación que el administrador principal tiene a la vista ahora mismo (id de usuario → código). */
+    private final Map<Integer, String> codigosRevelados = new HashMap<>();
+    /** Ids de los usuarios que ya tienen un código de recuperación. */
+    private Set<Integer> conCodigo = new HashSet<>();
+    /** true si quien tiene la sesión abierta es el administrador principal (el único que genera códigos nuevos). */
+    private boolean esPrincipal;
+
     @FXML private TextField campoBusqueda;
     @FXML private Label lblResultado;
     @FXML private Label lblMensaje;
@@ -58,6 +69,7 @@ public class ConfigUsuariosVista implements Initializable {
     @FXML private TableColumn<Usuario, String> colLogin;
     @FXML private TableColumn<Usuario, String> colRol;
     @FXML private TableColumn<Usuario, Usuario> colContrasena;
+    @FXML private TableColumn<Usuario, Usuario> colCodigo;
     @FXML private TableColumn<Usuario, Usuario> colEstado;
     @FXML private TableColumn<Usuario, Usuario> colAcciones;
 
@@ -99,6 +111,64 @@ public class ConfigUsuariosVista implements Initializable {
                 // La contraseña del usuario protegido no se puede ver: sin ojo.
                 ojo.setVisible(!u.isProtegido());
                 ojo.setManaged(!u.isProtegido());
+                setGraphic(caja);
+            }
+        });
+
+        // Código de recuperación de 6 dígitos: lo ve todo Administrador (el ojo lo muestra u oculta). Generar uno
+        // nuevo (↻) lo puede hacer solo el administrador principal.
+        Usuario sesion = Sesion.getUsuarioActual();
+        colCodigo.setVisible(Permisos.esAdministrativo(sesion));
+        esPrincipal = sesion != null && usuarioController.esPropietarioProtegido(sesion.getUsuarioLogin());
+        colCodigo.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue()));
+        colCodigo.setCellFactory(col -> new TableCell<>() {
+            private final Label texto = new Label();
+            private final ImageView icono = new ImageView();
+            private final Button ojo = new Button();
+            private final Button nuevo = new Button("↻");
+            private final HBox caja = new HBox(6, texto, ojo, nuevo);
+
+            {
+                icono.setFitWidth(18);
+                icono.setFitHeight(18);
+                icono.setPreserveRatio(true);
+                ojo.setGraphic(icono);
+                ojo.setStyle("-fx-background-color: transparent; -fx-padding: 2 4 2 4; -fx-cursor: hand;");
+                nuevo.setStyle("-fx-background-color: transparent; -fx-padding: 2 6 2 6; -fx-cursor: hand; "
+                        + "-fx-font-size: 15px; -fx-text-fill: #2C7BE5;");
+                nuevo.setTooltip(new Tooltip("Generar un código nuevo (el anterior dejará de servir)"));
+                caja.setAlignment(Pos.CENTER_LEFT);
+            }
+
+            @Override
+            protected void updateItem(Usuario u, boolean vacio) {
+                super.updateItem(u, vacio);
+                if (vacio || u == null) {
+                    setGraphic(null);
+                    return;
+                }
+                if (u.isProtegido()) {
+                    // El código del administrador principal se muestra una sola vez y no se puede ver aquí.
+                    texto.setText("—");
+                    texto.setStyle("");
+                    ojo.setVisible(false);
+                    ojo.setManaged(false);
+                    nuevo.setVisible(false);
+                    nuevo.setManaged(false);
+                    setGraphic(caja);
+                    return;
+                }
+                boolean tiene = conCodigo.contains(u.getIdUsuario());
+                boolean visible = codigosRevelados.containsKey(u.getIdUsuario());
+                texto.setText(visible ? codigosRevelados.get(u.getIdUsuario()) : (tiene ? "••••••" : "Sin código"));
+                texto.setStyle(visible ? "-fx-font-family: 'Consolas', 'Courier New', monospace; -fx-font-weight: bold;" : "");
+                icono.setImage(visible ? imagenOjoTachado : imagenOjo);
+                ojo.setOnAction(e -> alternarCodigo(u));
+                ojo.setVisible(tiene);
+                ojo.setManaged(tiene);
+                nuevo.setVisible(esPrincipal);
+                nuevo.setManaged(esPrincipal);
+                nuevo.setOnAction(e -> renovarCodigo(u, tiene));
                 setGraphic(caja);
             }
         });
@@ -161,6 +231,8 @@ public class ConfigUsuariosVista implements Initializable {
 
     private void cargarUsuarios() {
         reveladas.clear(); // al recargar, todas las contraseñas vuelven a ocultarse
+        codigosRevelados.clear();
+        conCodigo = usuarioController.usuariosConCodigo();
         try {
             List<Usuario> usuarios = usuarioController.obtenerUsuarios();
             usuariosFiltrados = new FilteredList<>(FXCollections.observableArrayList(usuarios), u -> true);
@@ -223,6 +295,48 @@ public class ConfigUsuariosVista implements Initializable {
             }
         }
         tablaUsuarios.refresh();
+    }
+
+    /** Muestra u oculta el código de recuperación de un usuario (solo el administrador principal). */
+    private void alternarCodigo(Usuario u) {
+        if (codigosRevelados.containsKey(u.getIdUsuario())) {
+            codigosRevelados.remove(u.getIdUsuario());
+        } else {
+            try {
+                String codigo = usuarioController.verCodigoRecuperacion(Sesion.getUsuarioActual(), u);
+                if (codigo == null) {
+                    codigosRevelados.put(u.getIdUsuario(), "No disponible");
+                    lblMensaje.setStyle("");
+                    lblMensaje.setText("ℹ El código de " + u.getNombre() + " no tiene copia visible. "
+                            + (esPrincipal ? "Pulsa ↻ para generar uno nuevo y verlo aquí."
+                                           : "Pídele al administrador principal que genere uno nuevo."));
+                } else {
+                    codigosRevelados.put(u.getIdUsuario(), codigo);
+                }
+            } catch (RuntimeException e) {
+                mostrarError(e.getMessage());
+                return;
+            }
+        }
+        tablaUsuarios.refresh();
+    }
+
+    /** Genera un código nuevo para un usuario y se lo muestra al administrador principal. */
+    private void renovarCodigo(Usuario u, boolean teniaCodigo) {
+        if (teniaCodigo && !Dialogos.confirmar("¿Generar un código nuevo para \"" + u.getNombre()
+                + "\"? El código actual dejará de servir.")) {
+            return;
+        }
+        try {
+            String codigo = usuarioController.renovarCodigoRecuperacion(Sesion.getUsuarioActual(), u);
+            lblMensaje.setStyle("");
+            lblMensaje.setText("✔ Código generado para " + u.getNombre() + ".");
+            cargarUsuarios();
+            CodigoRecuperacionVista.mostrar(codigo, "Código de " + u.getNombre(),
+                    "Entrégaselo para que pueda recuperar su acceso.");
+        } catch (RuntimeException e) {
+            mostrarError(e.getMessage());
+        }
     }
 
     /** Genera una contraseña temporal y se la muestra al administrador una sola vez. */

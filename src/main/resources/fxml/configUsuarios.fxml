@@ -31,12 +31,13 @@
 
     <TableView fx:id="tablaUsuarios" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="colNombre" text="Nombre" prefWidth="150" />
+            <TableColumn fx:id="colNombre" text="Nombre" prefWidth="140" />
             <TableColumn fx:id="colLogin" text="Usuario" prefWidth="110" />
-            <TableColumn fx:id="colRol" text="Rol" prefWidth="170" />
-            <TableColumn fx:id="colContrasena" text="Contraseña" prefWidth="175" />
+            <TableColumn fx:id="colRol" text="Rol" prefWidth="150" />
+            <TableColumn fx:id="colContrasena" text="Contraseña" prefWidth="165" />
+            <TableColumn fx:id="colCodigo" text="Código de recuperación" prefWidth="190" />
             <TableColumn fx:id="colEstado" text="Estado" prefWidth="90" />
-            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="390" />
+            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="380" />
         </columns>
     </TableView>
 

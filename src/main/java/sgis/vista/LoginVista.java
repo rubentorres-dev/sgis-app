@@ -4,6 +4,7 @@ import sgis.controlador.UsuarioController;
 import sgis.modelo.Usuario;
 import sgis.servicio.AuditoriaService;
 import sgis.util.ControlIntentosLogin;
+import sgis.util.Permisos;
 import sgis.util.Sesion;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
@@ -21,6 +22,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -45,7 +47,13 @@ public class LoginVista implements Initializable {
         aparicion.setToValue(1);
         aparicion.play();
 
-        Platform.runLater(() -> campoUsuario.requestFocus());
+        Platform.runLater(() -> {
+            if (usuarioController.sistemaBloqueado()) {
+                mostrarPantallaBloqueo();
+            } else {
+                campoUsuario.requestFocus();
+            }
+        });
 
         // Si MySQL no está encendido, se avisa desde el principio (la revisión corre aparte para no congelar la ventana).
         Thread revision = new Thread(() -> {
@@ -68,6 +76,12 @@ public class LoginVista implements Initializable {
             return;
         }
 
+        // Con el sistema bloqueado por un ataque de fuerza bruta, nadie entra: se muestra el candado.
+        if (usuarioController.sistemaBloqueado()) {
+            mostrarPantallaBloqueo();
+            return;
+        }
+
         // RNF-02: si el usuario está bloqueado por intentos fallidos, ni siquiera se consulta.
         long segundos = ControlIntentosLogin.segundosDeBloqueoRestantes(login);
         if (segundos > 0) {
@@ -82,22 +96,23 @@ public class LoginVista implements Initializable {
                 ControlIntentosLogin.registrarExito(login);
                 Sesion.iniciar(usuario);
                 AuditoriaService.registrar(usuario, "Inició sesión", null);
+                ofrecerCodigoRecuperacion(usuario);
                 Navegacion.cambiarEscena(event, "/fxml/panelPrincipal.fxml");
             } else {
                 int restantes = ControlIntentosLogin.registrarFallo(login);
                 if (restantes == 0) {
-                    AuditoriaService.registrar(null, "Acceso bloqueado por intentos fallidos", "Usuario: " + login.trim());
+                    // Queda registrado; si es el 3.er bloqueo del mismo usuario, el sistema se bloquea completo.
+                    if (usuarioController.registrarBloqueoTemporal(login)) {
+                        mostrarPantallaBloqueo();
+                        return;
+                    }
                 } else {
                     AuditoriaService.registrar(null, "Intento de acceso fallido",
                             "Usuario: " + login.trim() + " (quedan " + restantes + " intentos)");
                 }
                 if (restantes == 0) {
                     mostrarError("Usuario o contraseña incorrectos. Se bloqueó el acceso por "
-                            + ControlIntentosLogin.MINUTOS_BLOQUEO + " minutos. "
-                            + "Si olvidaste tu contraseña, comunícate con el administrador.");
-                } else if (restantes <= 2) {
-                    mostrarError("Usuario o contraseña incorrectos. Intentos restantes: " + restantes + ". "
-                            + "Si olvidaste tu contraseña, comunícate con el administrador.");
+                            + ControlIntentosLogin.MINUTOS_BLOQUEO + " minutos.");
                 } else {
                     mostrarError("Usuario o contraseña incorrectos. Intentos restantes: " + restantes + ".");
                 }
@@ -132,26 +147,56 @@ public class LoginVista implements Initializable {
         }
     }
 
-    /** Abre el formulario para cambiar la contraseña (o avisar que hay que hablar con el administrador). */
+    /**
+     * «¿Olvidaste tu contraseña?»: abre la recuperación con el código de 6 dígitos. Ya no se abre el formulario
+     * de cambio de contraseña para nadie, y el usuario es el que se escribió aquí (no se puede cambiar).
+     */
     @FXML
     private void abrirCambiarContrasena(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/cambiarContrasena.fxml"));
-            Parent root = loader.load();
-            CambiarContrasenaVista controlador = loader.getController();
-            controlador.configurar(campoUsuario.getText(), () -> {
-                campoContrasena.clear();
-                mostrarExito("✔ Contraseña actualizada. Inicia sesión con la nueva.");
-            });
-
-            Stage dialogo = new Stage();
-            dialogo.initModality(Modality.APPLICATION_MODAL);
-            dialogo.setTitle("Cambiar contraseña");
-            dialogo.setScene(new Scene(root));
-            dialogo.showAndWait();
-        } catch (Exception e) {
-            mostrarError("No se pudo abrir el formulario: " + e.getMessage());
+        String login = campoUsuario.getText();
+        if (login == null || login.isBlank()) {
+            mostrarError("Escribe tu usuario y vuelve a pulsar «¿Olvidaste tu contraseña?».");
+            campoUsuario.requestFocus();
+            return;
         }
+        RecuperacionVista.abrir(login, () -> {
+            campoContrasena.clear();
+            mostrarExito("✔ Contraseña recuperada. Inicia sesión con la nueva; se te mostrará un código nuevo.");
+        });
+    }
+
+    /**
+     * Si quien entró es el propietario y todavía no tiene código de recuperación, se le genera y se le muestra
+     * UNA sola vez. Cualquier problema aquí se ignora: el inicio de sesión nunca debe fallar por esto.
+     */
+    private void ofrecerCodigoRecuperacion(Usuario usuario) {
+        try {
+            String codigo = usuarioController.generarCodigoRecuperacionUnaVez(usuario);
+            if (codigo != null) {
+                CodigoRecuperacionVista.mostrar(codigo);
+            } else if (usuarioController.problemaCodigoRecuperacion() != null && Permisos.esAdministrativo(usuario)) {
+                Dialogos.informar("No se pudo preparar tu código de recuperación.\n\n"
+                        + usuarioController.problemaCodigoRecuperacion());
+            }
+        } catch (RuntimeException e) {
+            // se ignora a propósito
+        }
+    }
+
+    /** Reemplaza el inicio de sesión por la pantalla del candado (sistema bloqueado por fuerza bruta). */
+    private void mostrarPantallaBloqueo() {
+        Scene escena = campoUsuario.getScene();
+        if (escena == null) {
+            return;
+        }
+        escena.setRoot(SistemaBloqueadoVista.crear(() -> {
+            try {
+                // Un administrador lo desbloqueó: vuelve el inicio de sesión de siempre.
+                escena.setRoot(FXMLLoader.load(LoginVista.class.getResource("/fxml/login.fxml")));
+            } catch (IOException e) {
+                Dialogos.informar("El sistema se desbloqueó. Cierra y vuelve a abrir la aplicación.");
+            }
+        }));
     }
 
     private void mostrarError(String texto) {

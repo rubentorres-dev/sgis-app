@@ -1,16 +1,23 @@
 package sgis.controlador;
 
 import sgis.db.ConexionBD;
+import sgis.db.AuditoriaDAO;
 import sgis.db.UsuarioDAO;
 import sgis.modelo.Usuario;
 import sgis.servicio.AuditoriaService;
 import sgis.util.CifradoContrasena;
+import sgis.util.CodigoRecuperacion;
 import sgis.util.ControlIntentosLogin;
 import sgis.util.Permisos;
 import sgis.util.Sesion;
 
 import java.sql.SQLException;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.regex.Pattern;
 
 /**
@@ -39,6 +46,9 @@ public class UsuarioController {
      * @return el Usuario autenticado, o null si el login/contraseña son incorrectos.
      */
     public Usuario iniciarSesion(String usuarioLogin, String contrasena) {
+        if (sistemaBloqueado()) {
+            return null; // con el sistema bloqueado nadie entra, ni con credenciales correctas
+        }
         try {
             Usuario usuario = usuarioDAO.autenticar(usuarioLogin, contrasena);
             if (usuario != null && !Permisos.rolActivo(usuario.getRol())) {
@@ -65,6 +75,9 @@ public class UsuarioController {
     public String autorizarAdministrativo(String login, String contrasena) {
         if (login == null || login.isBlank() || contrasena == null || contrasena.isEmpty()) {
             return "Escribe el usuario y la contraseña de un administrador para autorizar.";
+        }
+        if (sistemaBloqueado()) {
+            return MENSAJE_SISTEMA_BLOQUEADO;
         }
         long segundos = ControlIntentosLogin.segundosDeBloqueoRestantes(login);
         if (segundos > 0) {
@@ -98,6 +111,8 @@ public class UsuarioController {
     }
 
     public String registrarUsuario(String nombre, String rol, String login, String contrasena) {
+        codigoUltimoUsuarioCreado = null;
+        problemaCodigo = null;
         if (nombre == null || nombre.isBlank()) {
             return "El nombre es obligatorio.";
         }
@@ -129,6 +144,15 @@ public class UsuarioController {
             AuditoriaService.registrar(actor(), "Creó usuario",
                     u.getNombre() + " · usuario " + u.getUsuarioLogin() + " · rol " + u.getRol()
                     + (desdeLogin ? " (autorizado desde el inicio de sesión)" : ""));
+            // Todo usuario nuevo recibe su código de recuperación (se muestra al crearlo).
+            try {
+                Usuario creado = buscarPorLogin(u.getUsuarioLogin());
+                if (creado != null) {
+                    codigoUltimoUsuarioCreado = crearCodigo(creado, actor(), "Generó el código de recuperación");
+                }
+            } catch (SQLException e) {
+                problemaCodigo = motivoDelProblema(e);
+            }
             return null;
         } catch (SQLException e) {
             return "Error al registrar el usuario: " + e.getMessage();
@@ -254,6 +278,11 @@ public class UsuarioController {
      * debe pedirle al administrador que la restablezca desde Configuración.
      */
     public String cambiarContrasenaPropia(String login, String contrasenaActual, String contrasenaNueva) {
+        // El perfil único del propietario no usa este formulario: su contraseña se recupera con el código único.
+        if (esPropietarioProtegido(login)) {
+            return "Este es el perfil único del propietario: su contraseña solo se recupera con el código único. "
+                    + "Escribe el usuario en el inicio de sesión y pulsa «¿Olvidaste tu contraseña?».";
+        }
         if (login == null || login.isBlank() || contrasenaActual == null || contrasenaActual.isEmpty()) {
             return "Escribe tu usuario y tu contraseña actual.";
         }
@@ -422,5 +451,394 @@ public class UsuarioController {
             }
         }
         return total;
+    }
+
+    // ------------------------------------------------------------------------------------------
+    // Perfil único del propietario (usuario protegido): código único de recuperación
+    // ------------------------------------------------------------------------------------------
+
+    /** Busca al propietario (usuario protegido) por su login; null si no existe o no es el protegido. */
+    private Usuario buscarPropietario(String login) throws SQLException {
+        if (login == null || login.isBlank()) {
+            return null;
+        }
+        for (Usuario u : usuarioDAO.listarUsuarios()) {
+            if (u.isProtegido() && u.getUsuarioLogin().equalsIgnoreCase(login.trim())) {
+                return u;
+            }
+        }
+        return null;
+    }
+
+    /** true si el login escrito es el del perfil único del propietario (el usuario protegido). */
+    public boolean esPropietarioProtegido(String login) {
+        try {
+            return buscarPropietario(login) != null;
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------
+    // Código de recuperación de 6 dígitos de TODOS los usuarios
+    // ------------------------------------------------------------------------------------------
+
+    /** Motivo por el que el último intento de preparar un código no se pudo hacer (null si no hubo problema). */
+    private String problemaCodigo;
+
+    /** Código del último usuario creado con registrarUsuario (para mostrarlo una vez), o null. */
+    private String codigoUltimoUsuarioCreado;
+
+    private static final String ACCION_FALLO_RECUPERACION = "Intento fallido de recuperación";
+    private static final String ACCION_EXITO_RECUPERACION = "Recuperó su contraseña con el código";
+
+    private final AuditoriaDAO auditoriaDAO = new AuditoriaDAO();
+
+    public String problemaCodigoRecuperacion() {
+        return problemaCodigo;
+    }
+
+    public String codigoDelUltimoUsuarioCreado() {
+        return codigoUltimoUsuarioCreado;
+    }
+
+    private Usuario buscarPorLogin(String login) throws SQLException {
+        if (login == null || login.isBlank()) {
+            return null;
+        }
+        for (Usuario u : usuarioDAO.listarUsuarios()) {
+            if (u.getUsuarioLogin().equalsIgnoreCase(login.trim())) {
+                return u;
+            }
+        }
+        return null;
+    }
+
+    private String motivoDelProblema(SQLException e) {
+        if ("42S22".equals(e.getSQLState())) {
+            return "Falta ejecutar el script agregar_codigo_recuperacion.sql en la base de datos.";
+        }
+        return "Error de la base de datos: " + e.getMessage();
+    }
+
+    /**
+     * Crea un código nuevo para el usuario: guarda su hash y, salvo el del administrador principal, una copia
+     * cifrada que el administrador principal puede ver. Reemplaza el código anterior, si había.
+     */
+    private String crearCodigo(Usuario usuario, Usuario quienActua, String accion) throws SQLException {
+        String codigo = CodigoRecuperacion.generar();
+        String copiaCifrada = usuario.isProtegido() ? null : CifradoContrasena.cifrar(codigo);
+        usuarioDAO.guardarCodigoRecuperacion(usuario.getIdUsuario(), CodigoRecuperacion.hash(codigo), copiaCifrada);
+        AuditoriaService.registrar(quienActua, accion, usuario.getNombre() + " · usuario " + usuario.getUsuarioLogin());
+        return codigo;
+    }
+
+    /**
+     * Se llama cuando alguien acaba de iniciar sesión. Si todavía no tiene código de recuperación (usuarios
+     * anteriores a esta función, o tras haber usado su código), genera uno, lo guarda en ese momento y lo
+     * devuelve para mostrarlo UNA sola vez.
+     *
+     * @return el código en claro, o null si no corresponde (ya tiene uno) o no se pudo (en ese caso,
+     *         problemaCodigoRecuperacion() dice por qué). Nunca interrumpe el inicio de sesión.
+     */
+    public String generarCodigoRecuperacionUnaVez(Usuario sesion) {
+        problemaCodigo = null;
+        if (sesion == null) {
+            return null;
+        }
+        Usuario usuario;
+        try {
+            usuario = buscarPorLogin(sesion.getUsuarioLogin());
+        } catch (SQLException e) {
+            return null;
+        }
+        if (usuario == null) {
+            return null;
+        }
+        try {
+            if (usuarioDAO.tieneCodigoRecuperacion(usuario.getIdUsuario())) {
+                return null;
+            }
+            return crearCodigo(usuario, sesion, "Activó su código de recuperación");
+        } catch (SQLException e) {
+            problemaCodigo = motivoDelProblema(e);
+            return null;
+        }
+    }
+
+    private boolean esAdministradorPrincipal(Usuario quien) {
+        return quien != null && esPropietarioProtegido(quien.getUsuarioLogin());
+    }
+
+    /**
+     * Ver el código de recuperación de un usuario: cualquier Administrador (la misma regla que para ver
+     * contraseñas). El código del administrador principal nunca se puede ver.
+     */
+    public String verCodigoRecuperacion(Usuario quienPide, Usuario objetivo) {
+        if (!Permisos.esAdministrativo(quienPide)) {
+            throw new SecurityException("Solo un Administrador puede ver los códigos de recuperación.");
+        }
+        if (objetivo.isProtegido()) {
+            throw new SecurityException("El código del administrador principal solo se muestra una vez, al activarlo.");
+        }
+        try {
+            AuditoriaService.registrar(quienPide, "Vio un código de recuperación",
+                    objetivo.getNombre() + " · usuario " + objetivo.getUsuarioLogin());
+            return CifradoContrasena.descifrar(usuarioDAO.obtenerCodigoCifrado(objetivo.getIdUsuario()));
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al consultar el código: " + e.getMessage(), e);
+        }
+    }
+
+    /** Genera un código NUEVO para un usuario (el anterior deja de servir). Solo el administrador principal. */
+    public String renovarCodigoRecuperacion(Usuario quienPide, Usuario objetivo) {
+        if (!esAdministradorPrincipal(quienPide)) {
+            throw new SecurityException("Solo el administrador principal puede generar códigos de recuperación.");
+        }
+        if (objetivo.isProtegido()) {
+            throw new SecurityException("El código del administrador principal se activa solo, al iniciar sesión.");
+        }
+        try {
+            return crearCodigo(objetivo, quienPide, "Generó el código de recuperación");
+        } catch (SQLException e) {
+            throw new RuntimeException(motivoDelProblema(e), e);
+        }
+    }
+
+    /** Ids de los usuarios que ya tienen código (para mostrar la columna «Código»). */
+    public Set<Integer> usuariosConCodigo() {
+        try {
+            return usuarioDAO.idsConCodigo();
+        } catch (SQLException e) {
+            return new HashSet<>();
+        }
+    }
+
+    // ---------- Recuperación de la contraseña con el código (los intentos se cuentan POR USUARIO) ----------
+
+    private static String detalleDe(String login) {
+        return "Usuario: " + login.trim().toLowerCase();
+    }
+
+    /**
+     * Intentos fallidos de recuperación de ese usuario en los últimos minutos, del más reciente al más antiguo.
+     * Se leen de la auditoría (la base de datos), así que NO se reinician al cerrar la aplicación. Los fallos
+     * anteriores a una recuperación exitosa de ese mismo usuario no cuentan.
+     */
+    private List<LocalDateTime> fallosRecientesDeRecuperacion(String login) throws SQLException {
+        LocalDateTime ahora = LocalDateTime.now();
+        long idUltimoExito = auditoriaDAO.ultimoIdQueEmpiezaCon(ACCION_EXITO_RECUPERACION, detalleDe(login));
+        List<LocalDateTime> validos = new ArrayList<>();
+        for (LocalDateTime fecha : auditoriaDAO.ultimasFechas(ACCION_FALLO_RECUPERACION, detalleDe(login),
+                idUltimoExito, ControlIntentosLogin.MAX_INTENTOS)) {
+            if (fecha.isAfter(ahora.minusMinutes(ControlIntentosLogin.MINUTOS_BLOQUEO))) {
+                validos.add(fecha);
+            }
+        }
+        return validos;
+    }
+
+    private long segundosBloqueoPermanente(String login) {
+        try {
+            List<LocalDateTime> fallos = fallosRecientesDeRecuperacion(login);
+            if (fallos.size() < ControlIntentosLogin.MAX_INTENTOS) {
+                return 0;
+            }
+            long resto = Duration.between(LocalDateTime.now(),
+                    fallos.get(0).plusMinutes(ControlIntentosLogin.MINUTOS_BLOQUEO)).getSeconds();
+            return Math.max(resto, 0);
+        } catch (SQLException e) {
+            return 0; // sin auditoría disponible, queda el control en memoria
+        }
+    }
+
+    private int intentosRestantesPermanentes(String login) {
+        try {
+            return Math.max(ControlIntentosLogin.MAX_INTENTOS - fallosRecientesDeRecuperacion(login).size(), 0);
+        } catch (SQLException e) {
+            return -1;
+        }
+    }
+
+    /**
+     * Pone una contraseña nueva a un usuario si escribe su código de recuperación (6 dígitos). Sirve para TODOS
+     * los usuarios, incluido el administrador principal. El código vale una sola vez, y después de 5 intentos
+     * fallidos con ese usuario la recuperación se bloquea 5 minutos (el conteo se guarda en la base de datos).
+     *
+     * @return null si todo salió bien, o el mensaje de por qué no se pudo.
+     */
+    public String recuperarContrasena(String login, String codigo, String contrasenaNueva) {
+        if (login == null || login.isBlank()) {
+            return "Escribe tu usuario en el inicio de sesión.";
+        }
+        if (sistemaBloqueado()) {
+            return MENSAJE_SISTEMA_BLOQUEADO;
+        }
+        if (!CodigoRecuperacion.tieneFormatoValido(codigo)) {
+            return "Escribe tu código de 6 dígitos.";
+        }
+        String clave = "recuperacion:" + login.trim().toLowerCase();
+        long segundos = Math.max(ControlIntentosLogin.segundosDeBloqueoRestantes(clave), segundosBloqueoPermanente(login));
+        if (segundos > 0) {
+            return "Demasiados intentos. Intenta de nuevo en " + (segundos / 60) + " min " + (segundos % 60) + " s.";
+        }
+        String errorNueva = validarContrasena(contrasenaNueva);
+        if (errorNueva != null) {
+            return errorNueva;
+        }
+
+        try {
+            Usuario usuario = buscarPorLogin(login);
+            boolean existeYActivo = usuario != null && "activo".equals(usuario.getEstado());
+            if (existeYActivo && !usuarioDAO.tieneCodigoRecuperacion(usuario.getIdUsuario())) {
+                return "Este usuario todavía no tiene un código. Entra una vez con tu contraseña para recibirlo, "
+                        + "o pídeselo al administrador principal.";
+            }
+            // Si el usuario no existe o está inactivo se responde igual que con un código incorrecto.
+            if (!existeYActivo || !usuarioDAO.codigoRecuperacionCoincide(usuario.getIdUsuario(), codigo)) {
+                int restantesMemoria = ControlIntentosLogin.registrarFallo(clave);
+                AuditoriaService.registrar(null, ACCION_FALLO_RECUPERACION, detalleDe(login));
+                int restantesGuardados = intentosRestantesPermanentes(login);
+                int restantes = restantesGuardados < 0 ? restantesMemoria : Math.min(restantesMemoria, restantesGuardados);
+                if (restantes == 0) {
+                    return "Código incorrecto. Se bloqueó la recuperación por "
+                            + ControlIntentosLogin.MINUTOS_BLOQUEO + " minutos.";
+                }
+                return "Código incorrecto. Intentos restantes: " + restantes + ".";
+            }
+
+            usuarioDAO.cambiarContrasena(usuario.getIdUsuario(), contrasenaNueva);
+            // Un código vale una sola vez: se descarta, y en el próximo inicio de sesión se muestra otro nuevo.
+            usuarioDAO.guardarCodigoRecuperacion(usuario.getIdUsuario(), null, null);
+            ControlIntentosLogin.registrarExito(clave);
+            ControlIntentosLogin.registrarExito(login); // si estaba bloqueado por intentos fallidos, queda libre
+            AuditoriaService.registrar(usuario, ACCION_EXITO_RECUPERACION, detalleDe(login));
+            return null;
+        } catch (SQLException e) {
+            if ("42S22".equals(e.getSQLState())) {
+                return "La recuperación por código no está disponible: falta ejecutar el script "
+                        + "agregar_codigo_recuperacion.sql en la base de datos.";
+            }
+            return "Error al recuperar la contraseña: " + e.getMessage();
+        }
+    }
+
+    /** Se conserva por compatibilidad: la recuperación ahora es igual para todos los usuarios. */
+    public String recuperarContrasenaPropietario(String login, String codigo, String contrasenaNueva) {
+        return recuperarContrasena(login, codigo, contrasenaNueva);
+    }
+
+    // ------------------------------------------------------------------------------------------
+    // Bloqueo del sistema por ataque de fuerza bruta
+    //
+    // Cada vez que alguien llega al bloqueo temporal de un usuario (5 intentos fallidos = 5 minutos) queda un
+    // registro en la auditoría. Si un MISMO usuario acumula 3 bloqueos dentro de una hora (es decir, alguien
+    // esperó varias veces y siguió probando), el sistema se bloquea completo. El estado se guarda en la base
+    // de datos (no se pierde al cerrar la aplicación) y solo lo levanta un Administrador con sus credenciales.
+    // ------------------------------------------------------------------------------------------
+
+    public static final int BLOQUEOS_PARA_ATAQUE = 3;
+    public static final int VENTANA_ATAQUE_MINUTOS = 60;
+    private static final int MAX_INTENTOS_DESBLOQUEO = 5;
+    private static final int MINUTOS_BLOQUEO_DESBLOQUEO = 15;
+
+    public static final String MENSAJE_SISTEMA_BLOQUEADO =
+            "El sistema está bloqueado. Para acceder, comunícate con los administradores.";
+
+    private static final String ACCION_BLOQUEO_TEMPORAL = "Acceso bloqueado por intentos fallidos";
+    private static final String ACCION_SISTEMA_BLOQUEADO = "Sistema bloqueado por fuerza bruta";
+    private static final String ACCION_SISTEMA_DESBLOQUEADO = "Sistema desbloqueado por un administrador";
+    private static final String ACCION_FALLO_DESBLOQUEO = "Intento fallido de desbloqueo";
+
+    /** true si el sistema está bloqueado por un ataque de fuerza bruta (hasta que un administrador lo desbloquee). */
+    public boolean sistemaBloqueado() {
+        try {
+            return auditoriaDAO.ultimoId(ACCION_SISTEMA_BLOQUEADO) > auditoriaDAO.ultimoId(ACCION_SISTEMA_DESBLOQUEADO);
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Se llama cuando un usuario acaba de llegar al bloqueo temporal por intentos fallidos. Deja el registro y
+     * comprueba si ya son 3 bloqueos del mismo usuario en la última hora (sin contar los anteriores al último
+     * desbloqueo del sistema).
+     *
+     * @return true si el sistema quedó bloqueado por un ataque de fuerza bruta
+     */
+    public boolean registrarBloqueoTemporal(String login) {
+        String detalle = detalleDe(login);
+        AuditoriaService.registrar(null, ACCION_BLOQUEO_TEMPORAL, detalle);
+        try {
+            long desdeElDesbloqueo = auditoriaDAO.ultimoId(ACCION_SISTEMA_DESBLOQUEADO);
+            LocalDateTime limite = LocalDateTime.now().minusMinutes(VENTANA_ATAQUE_MINUTOS);
+            int bloqueos = 0;
+            for (LocalDateTime fecha : auditoriaDAO.ultimasFechas(ACCION_BLOQUEO_TEMPORAL, detalle,
+                    desdeElDesbloqueo, BLOQUEOS_PARA_ATAQUE)) {
+                if (fecha.isAfter(limite)) {
+                    bloqueos++;
+                }
+            }
+            if (bloqueos >= BLOQUEOS_PARA_ATAQUE && !sistemaBloqueado()) {
+                AuditoriaService.registrar(null, ACCION_SISTEMA_BLOQUEADO,
+                        "Ataque de fuerza bruta contra el usuario " + login.trim() + " (" + bloqueos
+                                + " bloqueos en " + VENTANA_ATAQUE_MINUTOS + " minutos)");
+            }
+            return sistemaBloqueado();
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    /** Segundos que faltan para poder volver a intentar el desbloqueo, o 0 si no está limitado. */
+    private long segundosBloqueoDelDesbloqueo() {
+        try {
+            long desde = auditoriaDAO.ultimoId(ACCION_SISTEMA_DESBLOQUEADO);
+            LocalDateTime limite = LocalDateTime.now().minusMinutes(MINUTOS_BLOQUEO_DESBLOQUEO);
+            List<LocalDateTime> recientes = new ArrayList<>();
+            for (LocalDateTime fecha : auditoriaDAO.ultimasFechasDeAccion(ACCION_FALLO_DESBLOQUEO, desde, MAX_INTENTOS_DESBLOQUEO)) {
+                if (fecha.isAfter(limite)) {
+                    recientes.add(fecha);
+                }
+            }
+            if (recientes.size() < MAX_INTENTOS_DESBLOQUEO) {
+                return 0;
+            }
+            return Math.max(Duration.between(LocalDateTime.now(), recientes.get(0).plusMinutes(MINUTOS_BLOQUEO_DESBLOQUEO)).getSeconds(), 0);
+        } catch (SQLException e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Desbloquea el sistema si las credenciales son de un Administrador. Después de 5 intentos fallidos el propio
+     * desbloqueo se limita 15 minutos (también guardado en la base de datos), para que esta pantalla no sirva
+     * para adivinar contraseñas.
+     *
+     * @return null si quedó desbloqueado, o el mensaje de por qué no.
+     */
+    public String desbloquearSistema(String login, String contrasena) {
+        if (!sistemaBloqueado()) {
+            return null;
+        }
+        if (login == null || login.isBlank() || contrasena == null || contrasena.isEmpty()) {
+            return "Escribe el usuario y la contraseña de un administrador.";
+        }
+        long espera = segundosBloqueoDelDesbloqueo();
+        if (espera > 0) {
+            return "Demasiados intentos. Intenta de nuevo en " + (espera / 60) + " min " + (espera % 60) + " s.";
+        }
+        try {
+            Usuario usuario = usuarioDAO.autenticar(login, contrasena);
+            if (usuario != null && Permisos.esAdministrativo(usuario)) {
+                AuditoriaService.registrar(usuario, ACCION_SISTEMA_DESBLOQUEADO, "Desbloqueado por " + usuario.getUsuarioLogin());
+                ControlIntentosLogin.reiniciarTodo();
+                return sistemaBloqueado() ? "No se pudo registrar el desbloqueo. Intenta de nuevo." : null;
+            }
+            AuditoriaService.registrar(null, ACCION_FALLO_DESBLOQUEO, detalleDe(login));
+            return "Esas credenciales no pertenecen a un administrador.";
+        } catch (SQLException e) {
+            return "Error al verificar las credenciales: " + e.getMessage();
+        }
     }
 }

@@ -17,7 +17,10 @@ import java.sql.Types;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * DAO para registrar una venta completa: cliente, venta, líneas de detalle
@@ -30,10 +33,34 @@ public class VentaDAO {
     private final ProductoDAO productoDAO = new ProductoDAO();
 
     /**
-     * Registra la venta completa. Al terminar, venta.getIdVenta() queda
-     * con el id real generado, listo para usarse al enviar el comprobante.
+     * Registra la venta completa en UNA transacción: cliente, venta, detalle y descuento de stock.
+     * Si dos ventas chocan por un interbloqueo (deadlock) de la base de datos, se reintenta sola:
+     * la venta que fallaba no se había guardado, así que repetirla es seguro.
      */
     public void registrarVenta(Venta venta, String nombreCliente, String correoCliente)
+            throws SQLException, StockInsuficienteException {
+        int intento = 0;
+        while (true) {
+            try {
+                registrarVentaUnaVez(venta, nombreCliente, correoCliente);
+                return;
+            } catch (SQLException e) {
+                // SQLState 40001 = interbloqueo.
+                if ("40001".equals(e.getSQLState()) && ++intento < 4) {
+                    try {
+                        Thread.sleep(30L * intento + (long) (Math.random() * 40));
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw e;
+                    }
+                    continue;
+                }
+                throw e;
+            }
+        }
+    }
+
+    private void registrarVentaUnaVez(Venta venta, String nombreCliente, String correoCliente)
             throws SQLException, StockInsuficienteException {
 
         try (Connection conexion = ConexionBD.obtenerConexion()) {
@@ -45,32 +72,54 @@ public class VentaDAO {
                 venta.setFecha(LocalDateTime.now());
                 venta.setEstadoEnvio("pendiente");
 
-                // 2. Validar stock de TODOS los productos antes de descontar nada
+                // 2. Validar stock de TODOS los productos antes de descontar nada.
+                //    - Si un producto está repetido en varias líneas, se suman sus cantidades.
+                //    - Los productos se bloquean SIEMPRE en orden de id: así dos ventas simultáneas con los
+                //      mismos productos no se bloquean entre sí (interbloqueo).
+                Map<Integer, Integer> pedido = new TreeMap<>();
+                Map<Integer, String> nombres = new HashMap<>();
                 for (DetalleVenta linea : venta.getDetalles()) {
-                    Producto producto = productoDAO.obtenerPorId(conexion, linea.getIdProducto());
+                    pedido.merge(linea.getIdProducto(), linea.getCantidad(), Integer::sum);
+                    nombres.putIfAbsent(linea.getIdProducto(), linea.getNombreProducto());
+                }
+                Map<Integer, Producto> productos = new HashMap<>();
+                for (Map.Entry<Integer, Integer> pedidoDeProducto : pedido.entrySet()) {
+                    Producto producto = productoDAO.obtenerPorId(conexion, pedidoDeProducto.getKey());
                     if (producto == null) {
                         conexion.rollback();
                         throw new StockInsuficienteException(
-                            "El producto '" + linea.getNombreProducto() + "' ya no existe.");
+                            "El producto '" + nombres.get(pedidoDeProducto.getKey()) + "' ya no existe.");
                     }
-                    if (linea.getCantidad() > producto.getCantidadDisponible()) {
+                    if (!"activo".equals(producto.getEstado())) {
+                        conexion.rollback();
+                        throw new StockInsuficienteException(
+                            "El producto '" + producto.getNombre() + "' está desactivado y no se puede vender.");
+                    }
+                    if (pedidoDeProducto.getValue() > producto.getCantidadDisponible()) {
                         conexion.rollback();
                         throw new StockInsuficienteException(
                             "Stock insuficiente para '" + producto.getNombre() + "': "
-                            + "se pidieron " + linea.getCantidad() + ", disponibles " + producto.getCantidadDisponible() + ".");
+                            + "se pidieron " + pedidoDeProducto.getValue() + ", disponibles " + producto.getCantidadDisponible() + ".");
                     }
-                    linea.setPrecioUnitario(producto.getPrecio()); // toma el precio actual del catálogo
+                    productos.put(pedidoDeProducto.getKey(), producto);
+                }
+                for (DetalleVenta linea : venta.getDetalles()) {
+                    linea.setPrecioUnitario(productos.get(linea.getIdProducto()).getPrecio()); // precio actual del catálogo
                 }
 
                 // 3. Insertar la VENTA
                 int idVenta = insertarVenta(conexion, venta);
                 venta.setIdVenta(idVenta);
 
-                // 4. Insertar cada línea de DETALLE_VENTA y descontar stock
+                // 4. Insertar cada línea de DETALLE_VENTA y descontar stock (el descuento nunca deja el stock negativo)
                 for (DetalleVenta linea : venta.getDetalles()) {
                     linea.setIdVenta(idVenta);
                     insertarDetalleVenta(conexion, linea);
-                    productoDAO.descontarStock(conexion, linea.getIdProducto(), linea.getCantidad());
+                    if (!productoDAO.descontarStockSiHay(conexion, linea.getIdProducto(), linea.getCantidad())) {
+                        conexion.rollback();
+                        throw new StockInsuficienteException("Stock insuficiente para '"
+                                + productos.get(linea.getIdProducto()).getNombre() + "'. Intenta de nuevo.");
+                    }
                 }
 
                 conexion.commit();
@@ -86,6 +135,17 @@ public class VentaDAO {
      * después de intentar enviar el correo (esto ya NO es parte de la transacción
      * anterior, porque el envío de correo puede tardar o fallar por red).
      */
+    /** Cambia el estado de envío SOLO si sigue «pendiente» (el correo se envía en segundo plano y no debe pisar «completado»). */
+    public void actualizarEstadoEnvioSiPendiente(int idVenta, String nuevoEstado) throws SQLException {
+        String sql = "UPDATE VENTA SET estadoEnvio = ? WHERE idVenta = ? AND estadoEnvio = 'pendiente'";
+        try (Connection conexion = ConexionBD.obtenerConexion();
+             PreparedStatement stmt = conexion.prepareStatement(sql)) {
+            stmt.setString(1, nuevoEstado);
+            stmt.setInt(2, idVenta);
+            stmt.executeUpdate();
+        }
+    }
+
     public void actualizarEstadoEnvio(int idVenta, String nuevoEstado) throws SQLException {
         String sql = "UPDATE VENTA SET estadoEnvio = ? WHERE idVenta = ?";
         try (Connection conexion = ConexionBD.obtenerConexion();

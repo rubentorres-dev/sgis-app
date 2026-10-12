@@ -34,6 +34,10 @@ public class EmailService {
         props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.smtp.host", SMTP_HOST);
         props.put("mail.smtp.port", SMTP_PORT);
+        // Tiempos límite: sin ellos, un servidor que no responde deja el envío esperando para siempre.
+        props.put("mail.smtp.connectiontimeout", "8000");
+        props.put("mail.smtp.timeout", "10000");
+        props.put("mail.smtp.writetimeout", "10000");
 
         Session session = Session.getInstance(props, new Authenticator() {
             @Override

@@ -27,7 +27,7 @@ public class ReporteDAO {
             resumen.setStockSuficiente(contarPorRangoStock(conexion, EstadoStock.UMBRAL_MEDIO + 1, Integer.MAX_VALUE));
             resumen.setStockMedio(contarPorRangoStock(conexion, EstadoStock.UMBRAL_BAJO + 1, EstadoStock.UMBRAL_MEDIO));
             resumen.setStockBajo(contarPorRangoStock(conexion, 1, EstadoStock.UMBRAL_BAJO));
-            resumen.setStockAgotado(contarPorRangoStock(conexion, 0, 0));
+            resumen.setStockAgotado(contarPorRangoStock(conexion, Integer.MIN_VALUE, 0)); // 0 o menos
             resumen.setValorTotalInventario(calcularValorInventario(conexion));
             resumen.setVentasHoy(contarVentasHoy(conexion));
             resumen.setTotalVentasHoy(sumarTotalVentasHoy(conexion));

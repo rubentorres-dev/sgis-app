@@ -38,6 +38,22 @@ public class VentaController {
      */
     public String registrarVenta(String nombreCliente, String correoCliente, String metodoPago,
                                  Integer idUsuario, List<DetalleVenta> lineas) {
+        // La pantalla ya valida casi todo; esto protege al sistema si algo llega sin pasar por ella.
+        if (lineas == null || lineas.isEmpty()) {
+            return "Agrega al menos un producto a la venta.";
+        }
+        for (DetalleVenta linea : lineas) {
+            if (linea == null || linea.getCantidad() <= 0) {
+                return "Las cantidades deben ser mayores que 0.";
+            }
+        }
+        if (nombreCliente == null || nombreCliente.isBlank()) {
+            return "Escribe el nombre del cliente.";
+        }
+        if (!ClienteController.correoValido(correoCliente)) {
+            return "Escribe un correo válido para el cliente (por ejemplo, nombre@correo.com).";
+        }
+
         Venta venta = new Venta();
         venta.setDetalles(lineas);
         venta.setMetodoPago(metodoPago);
@@ -58,20 +74,26 @@ public class VentaController {
         ultimoCorreoCliente = correoCliente;
         ultimoComprobante = comprobanteService.generarComprobante(venta, nombreCliente);
 
-        // 3. Intentar enviarlo por correo
-        boolean enviado = emailService.enviarComprobante(
-                correoCliente,
-                "Comprobante de compra Nº " + venta.getIdVenta() + " - Abasto La Barata",
-                ultimoComprobante
-        );
-
-        try {
-            ventaDAO.actualizarEstadoEnvio(venta.getIdVenta(), enviado ? "enviado" : "fallido");
-        } catch (SQLException e) {
-            // La venta ya se guardó correctamente; si esto falla, solo se pierde
-            // la actualización del estado del envío, no la venta en sí.
-            System.out.println("No se pudo actualizar el estado de envío: " + e.getMessage());
-        }
+        // 3. Enviarlo por correo EN SEGUNDO PLANO: sin internet o con un servidor que no responde, la pantalla
+        //    no se congela. El estado queda «pendiente» y pasa a «enviado» o «fallido» cuando termine el intento.
+        final int idVenta = venta.getIdVenta();
+        final String comprobante = ultimoComprobante;
+        Thread envio = new Thread(() -> {
+            boolean enviado = emailService.enviarComprobante(
+                    correoCliente,
+                    "Comprobante de compra Nº " + idVenta + " - Abasto La Barata",
+                    comprobante
+            );
+            try {
+                ventaDAO.actualizarEstadoEnvioSiPendiente(idVenta, enviado ? "enviado" : "fallido");
+            } catch (SQLException e) {
+                // La venta ya se guardó correctamente; si esto falla, solo se pierde
+                // la actualización del estado del envío, no la venta en sí.
+                System.out.println("No se pudo actualizar el estado de envío: " + e.getMessage());
+            }
+        }, "envio-correo");
+        envio.setDaemon(true);
+        envio.start();
 
         return null; // La venta se registró correctamente (el envío del correo se reporta aparte).
     }

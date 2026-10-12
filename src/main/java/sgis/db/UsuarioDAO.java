@@ -2,6 +2,7 @@ package sgis.db;
 
 import sgis.modelo.Usuario;
 import sgis.util.CifradoContrasena;
+import sgis.util.CodigoRecuperacion;
 import sgis.util.PasswordUtil;
 
 import java.sql.Connection;
@@ -9,7 +10,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * DAO para la tabla USUARIO: autenticación (login) y gestión de usuarios.
@@ -249,5 +252,114 @@ public class UsuarioDAO {
                 return rs.next() && rs.getInt("total") > 0;
             }
         }
+    }
+
+    // ------------------------------------------------------------------------------------------
+    // Código único de recuperación del propietario (usuario protegido). Solo se guarda su hash.
+    // Si la columna codigoRecuperacion todavía no existe, estos métodos lanzan SQLException
+    // (SQLState 42S22) y quien los llama debe tratarlo como "función no disponible".
+    // ------------------------------------------------------------------------------------------
+
+    /** @return true si el usuario ya tiene un código de recuperación activo. */
+    public boolean tieneCodigoRecuperacion(int idUsuario) throws SQLException {
+        String sql = "SELECT codigoRecuperacion FROM USUARIO WHERE idUsuario = ?";
+        try (Connection conexion = ConexionBD.obtenerConexion();
+             PreparedStatement stmt = conexion.prepareStatement(sql)) {
+            stmt.setInt(1, idUsuario);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    return false;
+                }
+                String hash = rs.getString(1);
+                return hash != null && !hash.isEmpty();
+            }
+        }
+    }
+
+    /** Guarda el hash del código de recuperación; con null lo descarta (el código ya se usó). */
+    public void guardarCodigoRecuperacion(int idUsuario, String hash) throws SQLException {
+        String sql = "UPDATE USUARIO SET codigoRecuperacion = ? WHERE idUsuario = ?";
+        try (Connection conexion = ConexionBD.obtenerConexion();
+             PreparedStatement stmt = conexion.prepareStatement(sql)) {
+            if (hash == null) {
+                stmt.setNull(1, java.sql.Types.VARCHAR);
+            } else {
+                stmt.setString(1, hash);
+            }
+            stmt.setInt(2, idUsuario);
+            stmt.executeUpdate();
+        }
+    }
+
+    /** @return true si el código escrito coincide con el guardado para ese usuario. */
+    public boolean codigoRecuperacionCoincide(int idUsuario, String codigoEscrito) throws SQLException {
+        String sql = "SELECT codigoRecuperacion FROM USUARIO WHERE idUsuario = ?";
+        try (Connection conexion = ConexionBD.obtenerConexion();
+             PreparedStatement stmt = conexion.prepareStatement(sql)) {
+            stmt.setInt(1, idUsuario);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() && CodigoRecuperacion.coincide(codigoEscrito, rs.getString(1));
+            }
+        }
+    }
+
+    /**
+     * Guarda el hash del código de recuperación y, si se indica, una copia cifrada (columna codigoVisible) que el
+     * administrador principal puede ver. Con hash y copia en null, descarta el código. Si la columna
+     * codigoVisible todavía no existe, se guarda solo el hash (el código funciona, pero no se puede ver).
+     */
+    public void guardarCodigoRecuperacion(int idUsuario, String hash, String cifrado) throws SQLException {
+        try {
+            guardarCodigo(idUsuario, hash, cifrado, true);
+        } catch (SQLException e) {
+            if (!columnaNoExiste(e)) throw e;
+            guardarCodigo(idUsuario, hash, cifrado, false); // sin la copia visible; si falta el hash, vuelve a fallar
+        }
+    }
+
+    private void guardarCodigo(int idUsuario, String hash, String cifrado, boolean conCopia) throws SQLException {
+        String sql = conCopia
+                ? "UPDATE USUARIO SET codigoRecuperacion = ?, codigoVisible = ? WHERE idUsuario = ?"
+                : "UPDATE USUARIO SET codigoRecuperacion = ? WHERE idUsuario = ?";
+        try (Connection conexion = ConexionBD.obtenerConexion();
+             PreparedStatement stmt = conexion.prepareStatement(sql)) {
+            if (hash == null) stmt.setNull(1, java.sql.Types.VARCHAR); else stmt.setString(1, hash);
+            if (conCopia) {
+                if (cifrado == null) stmt.setNull(2, java.sql.Types.VARCHAR); else stmt.setString(2, cifrado);
+                stmt.setInt(3, idUsuario);
+            } else {
+                stmt.setInt(2, idUsuario);
+            }
+            stmt.executeUpdate();
+        }
+    }
+
+    /** La copia cifrada del código (para que el administrador principal la vea), o null si no hay. */
+    public String obtenerCodigoCifrado(int idUsuario) throws SQLException {
+        String sql = "SELECT codigoVisible FROM USUARIO WHERE idUsuario = ?";
+        try (Connection conexion = ConexionBD.obtenerConexion();
+             PreparedStatement stmt = conexion.prepareStatement(sql)) {
+            stmt.setInt(1, idUsuario);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getString(1) : null;
+            }
+        } catch (SQLException e) {
+            if (columnaNoExiste(e)) return null;
+            throw e;
+        }
+    }
+
+    /** Ids de los usuarios que tienen un código de recuperación activo. */
+    public Set<Integer> idsConCodigo() throws SQLException {
+        String sql = "SELECT idUsuario FROM USUARIO WHERE codigoRecuperacion IS NOT NULL AND codigoRecuperacion <> ''";
+        Set<Integer> ids = new HashSet<>();
+        try (Connection conexion = ConexionBD.obtenerConexion();
+             PreparedStatement stmt = conexion.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                ids.add(rs.getInt(1));
+            }
+        }
+        return ids;
     }
 }

@@ -18,6 +18,11 @@ public class ClienteController {
 
     private static final Pattern CORREO_VALIDO = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
 
+    /** true si el texto tiene forma de correo (algo@dominio.ext). Lo usan Clientes y Ventas. */
+    public static boolean correoValido(String correo) {
+        return correo != null && CORREO_VALIDO.matcher(correo.trim()).matches();
+    }
+
     private final ClienteDAO clienteDAO = new ClienteDAO();
 
     public List<Cliente> obtenerClientes() {

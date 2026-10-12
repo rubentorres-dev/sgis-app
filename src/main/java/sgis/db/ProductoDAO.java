@@ -50,6 +50,21 @@ public class ProductoDAO {
     /**
      * Descuenta cantidad del stock de un producto, dentro de una transacción existente.
      */
+    /**
+     * Descuenta stock SOLO si alcanza (nunca lo deja negativo, aunque otra venta lo haya cambiado en el medio).
+     * @return false si no había suficiente y no se descontó nada
+     */
+    public boolean descontarStockSiHay(Connection conexion, int idProducto, int cantidad) throws SQLException {
+        String sql = "UPDATE PRODUCTO SET cantidadDisponible = cantidadDisponible - ? "
+                   + "WHERE idProducto = ? AND cantidadDisponible >= ?";
+        try (PreparedStatement stmt = conexion.prepareStatement(sql)) {
+            stmt.setInt(1, cantidad);
+            stmt.setInt(2, idProducto);
+            stmt.setInt(3, cantidad);
+            return stmt.executeUpdate() == 1;
+        }
+    }
+
     public void descontarStock(Connection conexion, int idProducto, int cantidad) throws SQLException {
         String sql = "UPDATE PRODUCTO SET cantidadDisponible = cantidadDisponible - ? WHERE idProducto = ?";
         try (PreparedStatement stmt = conexion.prepareStatement(sql)) {

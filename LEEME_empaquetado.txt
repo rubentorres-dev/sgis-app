@@ -32,6 +32,8 @@ Antes de abrir la aplicación
     6) crear_auditoria.sql                (crea el registro de "quién tocó el sistema")
     7) crear_roles.sql                    (roles configurables: crear roles nuevos desde Configuración)
     8) proteger_usuario_admin.sql         (usuario admin protegido: nadie puede editarlo, desactivarlo ni eliminarlo)
+    9) agregar_codigo_recuperacion.sql    (código de recuperación de 6 dígitos)
+   10) agregar_codigo_visible.sql         (copia cifrada del código, para el administrador principal)
   Si alguno dice que la columna ya existe, es porque ya lo habías ejecutado.
 
 Si algo falla

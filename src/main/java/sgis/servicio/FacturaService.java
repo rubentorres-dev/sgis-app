@@ -2,7 +2,9 @@ package sgis.servicio;
 
 import sgis.modelo.DetalleVenta;
 import sgis.modelo.Venta;
+import sgis.util.Cedula;
 import sgis.util.FormatoMoneda;
+import sgis.util.Telefono;
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Element;
@@ -34,7 +36,7 @@ public class FacturaService {
     private static final Color BORDE = new Color(224, 227, 235);
     private static final DateTimeFormatter FECHA_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-    public void generarFactura(Venta venta, String nombreCliente, String correoCliente, File destino)
+    public void generarFactura(Venta venta, String nombreCliente, String correoCliente, String cedula, String telefono, File destino)
             throws IOException {
 
         Font fTitulo = new Font(Font.HELVETICA, 20, Font.BOLD, AZUL);
@@ -60,6 +62,8 @@ public class FacturaService {
             datos.setWidthPercentage(70);
             datos.setHorizontalAlignment(Element.ALIGN_LEFT);
             filaDato(datos, "Cliente", nombreCliente, fNegrita, fTexto);
+            filaDato(datos, "Cédula", cedula == null || cedula.isBlank() ? "No registrada" : Cedula.formatear(cedula), fNegrita, fTexto);
+            filaDato(datos, "Teléfono", telefono == null || telefono.isBlank() ? "No registrado" : Telefono.formatear(telefono), fNegrita, fTexto);
             filaDato(datos, "Correo", correoCliente, fNegrita, fTexto);
             filaDato(datos, "Fecha", venta.getFecha() == null ? "-" : venta.getFecha().format(FECHA_HORA), fNegrita, fTexto);
             filaDato(datos, "Método de pago", capitalizar(venta.getMetodoPago()), fNegrita, fTexto);

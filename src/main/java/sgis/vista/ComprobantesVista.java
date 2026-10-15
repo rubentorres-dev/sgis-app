@@ -212,8 +212,9 @@ public class ComprobantesVista implements Initializable {
         }
 
         try {
+            String[] contacto = ventaController.contactoDelCliente(ventaMostrada.getIdVenta());
             facturaService.generarFactura(ventaMostrada, ventaMostrada.getNombreCliente(),
-                    ventaMostrada.getCorreoCliente(), destino);
+                    ventaMostrada.getCorreoCliente(), contacto[0], contacto[1], destino);
 
             // El PDF se generó y se guardó: el comprobante queda completado.
             int idVenta = ventaMostrada.getIdVenta();

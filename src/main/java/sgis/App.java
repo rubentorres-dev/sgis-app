@@ -29,8 +29,8 @@ import java.io.InputStream;
 public class App extends Application {
 
     private static final String NOMBRE_APP = "Administrador de ventas";
-    /** Versión que se ve en la barra de título (v1.8.1 = corrige el aviso «Data truncated» al descargar la factura). */
-    private static final String VERSION = "1.8.1";
+    /** Versión que se ve en la barra de título (v1.8.2 = la factura PDF muestra la cédula y el teléfono del cliente). */
+    private static final String VERSION = "1.8.2";
 
     @Override
     public void start(Stage stage) {

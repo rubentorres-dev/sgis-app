@@ -159,6 +159,15 @@ public class VentaController {
     }
 
     /** Lee una venta completa para reconstruir su comprobante. @return null si no existe. */
+    /** {cédula, teléfono} del cliente de una venta (solo dígitos; nulos si no los hay). Es para la factura PDF. */
+    public String[] contactoDelCliente(int idVenta) {
+        try {
+            return ventaDAO.contactoDelCliente(idVenta);
+        } catch (SQLException e) {
+            return new String[]{null, null};
+        }
+    }
+
     public Venta obtenerVentaCompleta(int idVenta) {
         try {
             return ventaDAO.obtenerVentaCompleta(idVenta);

@@ -233,8 +233,9 @@ public class VentasVista implements Initializable {
         }
 
         try {
+            String[] contacto = ventaController.contactoDelCliente(venta.getIdVenta());
             facturaService.generarFactura(venta, ventaController.getUltimoNombreCliente(),
-                    ventaController.getUltimoCorreoCliente(), destino);
+                    ventaController.getUltimoCorreoCliente(), contacto[0], contacto[1], destino);
             // El PDF se generó y se guardó: el comprobante de esta venta queda completado.
             String errorEstado = ventaController.marcarComprobanteCompletado(venta.getIdVenta());
             Mensajes.exito(lblMensaje, errorEstado == null ? "Factura descargada" : "Factura descargada. " + errorEstado,

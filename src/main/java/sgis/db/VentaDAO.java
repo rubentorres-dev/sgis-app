@@ -181,6 +181,26 @@ public class VentaDAO {
      * o su factura en cualquier momento.
      * @return la venta, o null si no existe.
      */
+    /**
+     * Cédula y teléfono (solo dígitos) del cliente de una venta, para la factura PDF: {cédula, teléfono}.
+     * Si el cliente no los tiene, o si faltan los scripts de la cédula y el teléfono, devuelve nulos.
+     */
+    public String[] contactoDelCliente(int idVenta) throws SQLException {
+        String sql = "SELECT c.cedula, c.telefono FROM VENTA v JOIN CLIENTE c ON c.idCliente = v.idCliente WHERE v.idVenta = ?";
+        try (Connection conexion = ConexionBD.obtenerConexion();
+             PreparedStatement stmt = conexion.prepareStatement(sql)) {
+            stmt.setInt(1, idVenta);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? new String[]{rs.getString(1), rs.getString(2)} : new String[]{null, null};
+            }
+        } catch (SQLException e) {
+            if ("42S22".equals(e.getSQLState())) {
+                return new String[]{null, null};
+            }
+            throw e;
+        }
+    }
+
     public Venta obtenerVentaCompleta(int idVenta) throws SQLException {
         String sqlVenta = "SELECT v.idVenta, v.fecha, v.estadoEnvio, v.metodoPago, v.idCliente, v.idUsuario, "
                         + "c.nombre AS nombreCliente, c.correo AS correoCliente "

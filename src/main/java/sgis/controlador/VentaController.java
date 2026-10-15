@@ -176,7 +176,24 @@ public class VentaController {
             ventaDAO.actualizarEstadoEnvio(idVenta, "completado");
             return null;
         } catch (SQLException e) {
+            if (esEstadoNoPermitido(e)) {
+                // La base de datos es anterior al script actualizar_estado_comprobante.sql: se corrige sola y se reintenta.
+                try {
+                    ventaDAO.asegurarEstadoCompletado();
+                    ventaDAO.actualizarEstadoEnvio(idVenta, "completado");
+                    return null;
+                } catch (SQLException e2) {
+                    return "El comprobante no pudo marcarse como completado: falta ejecutar el script "
+                            + "actualizar_estado_comprobante.sql en la base de datos.";
+                }
+            }
             return "No se pudo actualizar el estado del comprobante: " + e.getMessage();
         }
+    }
+
+    /** «Data truncated for column 'estadoEnvio'»: MySQL no acepta el valor porque la columna no tiene «completado». */
+    private boolean esEstadoNoPermitido(SQLException e) {
+        return e.getErrorCode() == 1265
+                || (e.getMessage() != null && e.getMessage().contains("Data truncated") && e.getMessage().contains("estadoEnvio"));
     }
 }

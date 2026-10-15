@@ -147,6 +147,25 @@ public class VentaDAO {
         }
     }
 
+    /**
+     * Si la columna estadoEnvio todavía no admite «completado» (la base de datos es anterior al script
+     * actualizar_estado_comprobante.sql), la corrige. Es seguro llamarlo varias veces.
+     */
+    public void asegurarEstadoCompletado() throws SQLException {
+        try (Connection conexion = ConexionBD.obtenerConexion(); Statement st = conexion.createStatement()) {
+            String tipo = null;
+            try (ResultSet rs = st.executeQuery("SHOW COLUMNS FROM VENTA LIKE 'estadoEnvio'")) {
+                if (rs.next()) {
+                    tipo = rs.getString("Type");
+                }
+            }
+            if (tipo != null && !tipo.toLowerCase().contains("completado")) {
+                st.executeUpdate("ALTER TABLE VENTA MODIFY estadoEnvio "
+                        + "ENUM('pendiente', 'enviado', 'fallido', 'completado') NOT NULL DEFAULT 'pendiente'");
+            }
+        }
+    }
+
     public void actualizarEstadoEnvio(int idVenta, String nuevoEstado) throws SQLException {
         String sql = "UPDATE VENTA SET estadoEnvio = ? WHERE idVenta = ?";
         try (Connection conexion = ConexionBD.obtenerConexion();

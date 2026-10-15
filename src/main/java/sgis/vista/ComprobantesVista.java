@@ -136,7 +136,7 @@ public class ComprobantesVista implements Initializable {
                 seleccionar(idParaSeleccionar);
             }
         } catch (RuntimeException e) {
-            lblMensaje.setText("✘ Error al cargar las ventas: " + e.getMessage());
+            Mensajes.error(lblMensaje, "Error al cargar las ventas: " + e.getMessage());
         }
     }
 
@@ -176,7 +176,7 @@ public class ComprobantesVista implements Initializable {
         try {
             Venta venta = ventaController.obtenerVentaCompleta(idVenta);
             ventaMostrada = venta;
-            lblMensaje.setText("");
+            Mensajes.normal(lblMensaje, "");
             if (venta == null) {
                 areaComprobante.clear();
                 lblEstadoDetalle.setText("");
@@ -188,7 +188,7 @@ public class ComprobantesVista implements Initializable {
                     + ". " + EstadoComprobante.detalle(venta.getEstadoEnvio()));
             btnDescargar.setDisable(false);
         } catch (RuntimeException e) {
-            lblMensaje.setText("✘ " + e.getMessage());
+            Mensajes.error(lblMensaje, e.getMessage());
         }
     }
 
@@ -219,19 +219,16 @@ public class ComprobantesVista implements Initializable {
             int idVenta = ventaMostrada.getIdVenta();
             String error = ventaController.marcarComprobanteCompletado(idVenta);
             if (error == null) {
-                lblMensaje.setStyle("");
-                lblMensaje.setText("✔ Factura guardada en: " + destino.getAbsolutePath());
                 cargarVentas(idVenta); // refresca el estado en la lista
                 if (alActualizar != null) {
                     alActualizar.run();
                 }
-            } else {
-                lblMensaje.setText("✘ " + error);
             }
+            // El PDF ya se guardó: el aviso es de éxito aunque el estado no se haya podido actualizar (se explica al lado).
+            Mensajes.exito(lblMensaje, error == null ? "Factura descargada" : "Factura descargada. " + error, destino.getAbsolutePath());
             Archivos.abrir(destino);
         } catch (IOException | RuntimeException e) {
-            lblMensaje.setStyle("-fx-text-fill: #C0392B;");
-            lblMensaje.setText("✘ No se pudo generar la factura: " + e.getMessage());
+            Mensajes.error(lblMensaje, "No se pudo generar la factura: " + e.getMessage());
         }
     }
 

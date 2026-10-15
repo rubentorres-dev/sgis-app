@@ -25,7 +25,7 @@
     <center>
         <VBox>
             <HBox styleClass="topbar" spacing="10">
-                <Label styleClass="topbar-title" text="Usuarios" />
+                <Label styleClass="topbar-title" text="Clientes" />
             </HBox>
 
             <VBox spacing="16">
@@ -37,18 +37,20 @@
                     <TextField fx:id="campoBusqueda" promptText="Buscar por nombre o correo..." prefWidth="340" />
                     <Label fx:id="lblResultado" text="" />
                     <Region HBox.hgrow="ALWAYS" />
-                    <Button styleClass="boton-primario" text="+ Registrar usuario" onAction="#abrirFormularioNuevo" />
+                    <Button styleClass="boton-primario" text="+ Registrar cliente" onAction="#abrirFormularioNuevo" />
                 </HBox>
 
                 <VBox>
                     <HBox styleClass="section-header">
-                        <Label styleClass="section-header-label" text="Usuarios registrados (clientes y facturación)" />
+                        <Label styleClass="section-header-label" text="Clientes registrados (compran o piden factura)" />
                     </HBox>
                     <TableView fx:id="tablaUsuarios" prefHeight="420">
                         <columns>
                             <TableColumn fx:id="colId" text="N°" prefWidth="70" />
-                            <TableColumn fx:id="colNombre" text="Nombre" prefWidth="280" />
-                            <TableColumn fx:id="colCorreo" text="Correo electrónico" prefWidth="320" />
+                            <TableColumn fx:id="colNombre" text="Nombre" prefWidth="230" />
+                            <TableColumn fx:id="colCedula" text="Cédula" prefWidth="170" />
+                            <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="130" />
+                            <TableColumn fx:id="colCorreo" text="Correo electrónico" prefWidth="260" />
                             <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="140" />
                         </columns>
                     </TableView>

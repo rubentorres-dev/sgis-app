@@ -2,6 +2,8 @@ package sgis.vista;
 
 import sgis.controlador.ClienteController;
 import sgis.modelo.Cliente;
+import sgis.util.Sesion;
+import sgis.util.Telefono;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -13,6 +15,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.geometry.Pos;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.Image;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
@@ -25,6 +30,8 @@ import javafx.stage.Stage;
 
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.ResourceBundle;
 
 /**
@@ -35,6 +42,8 @@ public class ConfigClientesVista implements Initializable {
 
     private final ClienteController clienteController = new ClienteController();
     private FilteredList<Cliente> clientesFiltrados;
+    /** Cédulas que el Administrador tiene a la vista ahora mismo (id de cliente → cédula con puntos). */
+    private final Map<Integer, String> cedulasReveladas = new HashMap<>();
 
     @FXML private TextField campoBusqueda;
     @FXML private Label lblResultado;
@@ -43,6 +52,8 @@ public class ConfigClientesVista implements Initializable {
     @FXML private TableColumn<Cliente, String> colId;
     @FXML private TableColumn<Cliente, String> colNombre;
     @FXML private TableColumn<Cliente, String> colCorreo;
+    @FXML private TableColumn<Cliente, Cliente> colCedula;
+    @FXML private TableColumn<Cliente, String> colTelefono;
     @FXML private TableColumn<Cliente, Cliente> colAcciones;
 
     @Override
@@ -51,6 +62,10 @@ public class ConfigClientesVista implements Initializable {
         colNombre.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getNombre()));
         colCorreo.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getCorreo()));
 
+        colTelefono.setCellValueFactory(param -> new SimpleStringProperty(
+                param.getValue().getTelefono() == null ? "Sin teléfono" : Telefono.formatear(param.getValue().getTelefono())));
+        // La cédula aparece oculta; el ojito la muestra y cada consulta queda en la auditoría.
+        ColumnaCedula.instalar(colCedula, tablaClientes, clienteController, cedulasReveladas, this::mostrarError);
         colAcciones.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue()));
         colAcciones.setCellFactory(col -> new TableCell<>() {
             private final Button btnEditar = new Button("✏ Modificar");
@@ -76,6 +91,7 @@ public class ConfigClientesVista implements Initializable {
 
     private void cargarClientes() {
         try {
+            cedulasReveladas.clear(); // al recargar, todas las cédulas vuelven a ocultarse
             List<Cliente> clientes = clienteController.obtenerClientes();
             clientesFiltrados = new FilteredList<>(FXCollections.observableArrayList(clientes), c -> true);
             tablaClientes.setItems(clientesFiltrados);
@@ -92,7 +108,9 @@ public class ConfigClientesVista implements Initializable {
         clientesFiltrados.setPredicate(c ->
                 buscado.isEmpty()
                 || c.getNombre().toLowerCase().contains(buscado)
-                || c.getCorreo().toLowerCase().contains(buscado));
+                || c.getCorreo().toLowerCase().contains(buscado)
+                || (buscado.matches("[0-9.\\s]+") && c.getCedula() != null
+                    && c.getCedula().contains(buscado.replaceAll("[^0-9]", ""))));
 
         if (buscado.isEmpty()) {
             lblResultado.setText("");

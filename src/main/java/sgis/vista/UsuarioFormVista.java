@@ -22,6 +22,8 @@ public class UsuarioFormVista implements Initializable {
     @FXML private Label lblTitulo;
     @FXML private TextField campoNombre;
     @FXML private TextField campoCorreo;
+    @FXML private CampoContrasena campoCedula;
+    @FXML private TextField campoTelefono;
     @FXML private Label lblMensaje;
 
     private Cliente clienteAEditar; // null si es una persona nueva
@@ -29,7 +31,9 @@ public class UsuarioFormVista implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // nada que inicializar: el formulario solo tiene dos campos de texto
+        // La cédula no pasa de 10 dígitos y el teléfono tampoco: el siguiente número ya no se escribe.
+        campoCedula.soloNumeros(10);
+        Campos.soloNumeros(campoTelefono, 10, false);
     }
 
     /**
@@ -43,9 +47,11 @@ public class UsuarioFormVista implements Initializable {
         this.alGuardar = alGuardar;
 
         if (cliente != null) {
-            lblTitulo.setText("Modificar usuario");
+            lblTitulo.setText("Modificar cliente");
             campoNombre.setText(cliente.getNombre());
             campoCorreo.setText(cliente.getCorreo());
+            campoCedula.setText(cliente.getCedula() == null ? "" : cliente.getCedula());
+            campoTelefono.setText(cliente.getTelefono() == null ? "" : cliente.getTelefono());
         } else if (sugerenciaNombre != null && !sugerenciaNombre.isBlank()) {
             // Si lo que se buscó parece un correo, va al campo de correo; si no, al de nombre.
             if (sugerenciaNombre.contains("@")) {
@@ -60,12 +66,14 @@ public class UsuarioFormVista implements Initializable {
     private void guardar() {
         String nombre = campoNombre.getText();
         String correo = campoCorreo.getText();
+        String cedula = campoCedula.getText();
+        String telefono = campoTelefono.getText();
 
         String error;
         if (clienteAEditar == null) {
-            error = clienteController.registrarCliente(nombre, correo);
+            error = clienteController.registrarCliente(nombre, correo, cedula, telefono);
         } else {
-            error = clienteController.actualizarCliente(clienteAEditar, nombre, correo);
+            error = clienteController.actualizarCliente(clienteAEditar, nombre, correo, cedula, telefono);
         }
 
         if (error == null) {

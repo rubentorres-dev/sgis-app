@@ -129,15 +129,16 @@ public class UsuarioDAO {
             insertarUsuario(u, contrasenaPlana, true);
         } catch (SQLException e) {
             // Si la columna de la copia cifrada aún no existe (falta ejecutar el script), se guarda sin ella.
-            if (!columnaNoExiste(e)) throw e;
+            // Si lo que falta es la columna de la cédula, el error se informa (no se crea un usuario sin cédula).
+            if (!columnaNoExiste(e) || mencionaCedula(e)) throw e;
             insertarUsuario(u, contrasenaPlana, false);
         }
     }
 
     private void insertarUsuario(Usuario u, String contrasenaPlana, boolean conCopia) throws SQLException {
         String sql = conCopia
-                ? "INSERT INTO USUARIO (nombre, rol, usuarioLogin, contrasena, estado, contrasenaVisible) VALUES (?, ?, ?, ?, ?, ?)"
-                : "INSERT INTO USUARIO (nombre, rol, usuarioLogin, contrasena, estado) VALUES (?, ?, ?, ?, ?)";
+                ? "INSERT INTO USUARIO (nombre, rol, usuarioLogin, contrasena, estado, cedula, telefono, contrasenaVisible) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                : "INSERT INTO USUARIO (nombre, rol, usuarioLogin, contrasena, estado, cedula, telefono) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conexion = ConexionBD.obtenerConexion();
              PreparedStatement stmt = conexion.prepareStatement(sql)) {
@@ -147,8 +148,10 @@ public class UsuarioDAO {
             stmt.setString(3, u.getUsuarioLogin());
             stmt.setString(4, PasswordUtil.hash(contrasenaPlana));
             stmt.setString(5, u.getEstado() != null ? u.getEstado() : "activo");
+            stmt.setString(6, u.getCedula());
+            stmt.setString(7, u.getTelefono());
             if (conCopia) {
-                stmt.setString(6, CifradoContrasena.cifrar(contrasenaPlana));
+                stmt.setString(8, CifradoContrasena.cifrar(contrasenaPlana));
             }
             stmt.executeUpdate();
         }
@@ -361,5 +364,96 @@ public class UsuarioDAO {
             }
         }
         return ids;
+    }
+
+    private boolean mencionaCedula(SQLException e) {
+        return e.getMessage() != null
+                && (e.getMessage().toLowerCase().contains("cedula") || e.getMessage().toLowerCase().contains("telefono"));
+    }
+
+    /** ¿Otro usuario ya tiene esa cédula? */
+    public boolean existeCedula(String cedula, int idUsuarioExcluido) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM USUARIO WHERE cedula = ? AND idUsuario <> ?";
+        try (Connection conexion = ConexionBD.obtenerConexion();
+             PreparedStatement stmt = conexion.prepareStatement(sql)) {
+            stmt.setString(1, cedula);
+            stmt.setInt(2, idUsuarioExcluido);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        }
+    }
+
+    /** La cédula del usuario (solo dígitos), o null si no tiene o si falta el script de la cédula. */
+    public String obtenerCedula(int idUsuario) throws SQLException {
+        String sql = "SELECT cedula FROM USUARIO WHERE idUsuario = ?";
+        try (Connection conexion = ConexionBD.obtenerConexion();
+             PreparedStatement stmt = conexion.prepareStatement(sql)) {
+            stmt.setInt(1, idUsuario);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getString(1) : null;
+            }
+        } catch (SQLException e) {
+            if (columnaNoExiste(e)) return null;
+            throw e;
+        }
+    }
+
+    public void actualizarCedula(int idUsuario, String cedula) throws SQLException {
+        String sql = "UPDATE USUARIO SET cedula = ? WHERE idUsuario = ?";
+        try (Connection conexion = ConexionBD.obtenerConexion();
+             PreparedStatement stmt = conexion.prepareStatement(sql)) {
+            stmt.setString(1, cedula);
+            stmt.setInt(2, idUsuario);
+            stmt.executeUpdate();
+        }
+    }
+
+    /** El teléfono del usuario (solo dígitos), o null si no tiene o si falta el script del teléfono. */
+    public String obtenerTelefono(int idUsuario) throws SQLException {
+        String sql = "SELECT telefono FROM USUARIO WHERE idUsuario = ?";
+        try (Connection conexion = ConexionBD.obtenerConexion();
+             PreparedStatement stmt = conexion.prepareStatement(sql)) {
+            stmt.setInt(1, idUsuario);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getString(1) : null;
+            }
+        } catch (SQLException e) {
+            if (columnaNoExiste(e)) return null;
+            throw e;
+        }
+    }
+
+    public void actualizarTelefono(int idUsuario, String telefono) throws SQLException {
+        String sql = "UPDATE USUARIO SET telefono = ? WHERE idUsuario = ?";
+        try (Connection conexion = ConexionBD.obtenerConexion();
+             PreparedStatement stmt = conexion.prepareStatement(sql)) {
+            stmt.setString(1, telefono);
+            stmt.setInt(2, idUsuario);
+            stmt.executeUpdate();
+        }
+    }
+
+    /**
+     * Cédula y teléfono de todos los usuarios (id → {cédula, teléfono}) para la tabla de Configuración.
+     * Si faltan los scripts, devuelve lo que haya (o nada) sin romper la pantalla.
+     */
+    public java.util.Map<Integer, String[]> contactos() throws SQLException {
+        java.util.Map<Integer, String[]> mapa = new java.util.HashMap<>();
+        String[] consultas = {"SELECT idUsuario, cedula, telefono FROM USUARIO", "SELECT idUsuario, cedula, NULL FROM USUARIO"};
+        for (int i = 0; i < consultas.length; i++) {
+            try (Connection conexion = ConexionBD.obtenerConexion();
+                 PreparedStatement stmt = conexion.prepareStatement(consultas[i]);
+                 ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    mapa.put(rs.getInt(1), new String[]{rs.getString(2), rs.getString(3)});
+                }
+                return mapa;
+            } catch (SQLException e) {
+                if (!columnaNoExiste(e)) throw e;
+                mapa.clear();
+            }
+        }
+        return mapa;
     }
 }

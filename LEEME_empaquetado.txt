@@ -34,6 +34,8 @@ Antes de abrir la aplicación
     8) proteger_usuario_admin.sql         (usuario admin protegido: nadie puede editarlo, desactivarlo ni eliminarlo)
     9) agregar_codigo_recuperacion.sql    (código de recuperación de 6 dígitos)
    10) agregar_codigo_visible.sql         (copia cifrada del código, para el administrador principal)
+   11) agregar_cedula.sql                 (cédula de ciudadanía de clientes y usuarios)
+   12) agregar_telefono.sql               (teléfono de clientes y usuarios)
   Si alguno dice que la columna ya existe, es porque ya lo habías ejecutado.
 
 Si algo falla

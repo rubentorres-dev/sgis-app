@@ -28,8 +28,10 @@
     <TableView fx:id="tablaClientes" VBox.vgrow="ALWAYS">
         <columns>
             <TableColumn fx:id="colId" text="N°" prefWidth="70" />
-            <TableColumn fx:id="colNombre" text="Nombre" prefWidth="260" />
-            <TableColumn fx:id="colCorreo" text="Correo electrónico" prefWidth="300" />
+            <TableColumn fx:id="colNombre" text="Nombre" prefWidth="220" />
+            <TableColumn fx:id="colCedula" text="Cédula" prefWidth="170" />
+            <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="130" />
+            <TableColumn fx:id="colCorreo" text="Correo electrónico" prefWidth="250" />
             <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="220" />
         </columns>
     </TableView>

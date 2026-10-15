@@ -29,8 +29,8 @@ import java.io.InputStream;
 public class App extends Application {
 
     private static final String NOMBRE_APP = "Administrador de ventas";
-    /** Versión que se ve en la barra de título (v1.6 = correcciones de la revisión QA). */
-    private static final String VERSION = "1.6";
+    /** Versión que se ve en la barra de título (v1.8 = teléfono, cédula de máximo 10 dígitos y aviso de descarga con chulo verde). */
+    private static final String VERSION = "1.8";
 
     @Override
     public void start(Stage stage) {

@@ -31,13 +31,15 @@
 
     <TableView fx:id="tablaUsuarios" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="colNombre" text="Nombre" prefWidth="140" />
-            <TableColumn fx:id="colLogin" text="Usuario" prefWidth="110" />
-            <TableColumn fx:id="colRol" text="Rol" prefWidth="150" />
-            <TableColumn fx:id="colContrasena" text="Contraseña" prefWidth="165" />
-            <TableColumn fx:id="colCodigo" text="Código de recuperación" prefWidth="190" />
-            <TableColumn fx:id="colEstado" text="Estado" prefWidth="90" />
-            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="380" />
+            <TableColumn fx:id="colNombre" text="Nombre" prefWidth="130" />
+            <TableColumn fx:id="colLogin" text="Usuario" prefWidth="100" />
+            <TableColumn fx:id="colRol" text="Rol" prefWidth="175" />
+            <TableColumn fx:id="colContrasena" text="Contraseña" prefWidth="140" />
+            <TableColumn fx:id="colCedula" text="Cédula" prefWidth="160" />
+            <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="110" />
+            <TableColumn fx:id="colCodigo" text="Código de recuperación" prefWidth="170" />
+            <TableColumn fx:id="colEstado" text="Estado" prefWidth="80" />
+            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="400" />
         </columns>
     </TableView>
 

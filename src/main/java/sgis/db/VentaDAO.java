@@ -5,6 +5,7 @@ import sgis.modelo.Producto;
 import sgis.modelo.ResumenDia;
 import sgis.modelo.Venta;
 import sgis.modelo.VentaResumen;
+import sgis.util.DatosClienteException;
 import sgis.util.StockInsuficienteException;
 
 import java.sql.Connection;
@@ -37,12 +38,12 @@ public class VentaDAO {
      * Si dos ventas chocan por un interbloqueo (deadlock) de la base de datos, se reintenta sola:
      * la venta que fallaba no se había guardado, así que repetirla es seguro.
      */
-    public void registrarVenta(Venta venta, String nombreCliente, String correoCliente)
-            throws SQLException, StockInsuficienteException {
+    public void registrarVenta(Venta venta, String nombreCliente, String correoCliente, String cedulaCliente, String telefonoCliente)
+            throws SQLException, StockInsuficienteException, DatosClienteException {
         int intento = 0;
         while (true) {
             try {
-                registrarVentaUnaVez(venta, nombreCliente, correoCliente);
+                registrarVentaUnaVez(venta, nombreCliente, correoCliente, cedulaCliente, telefonoCliente);
                 return;
             } catch (SQLException e) {
                 // SQLState 40001 = interbloqueo.
@@ -60,14 +61,14 @@ public class VentaDAO {
         }
     }
 
-    private void registrarVentaUnaVez(Venta venta, String nombreCliente, String correoCliente)
-            throws SQLException, StockInsuficienteException {
+    private void registrarVentaUnaVez(Venta venta, String nombreCliente, String correoCliente, String cedulaCliente, String telefonoCliente)
+            throws SQLException, StockInsuficienteException, DatosClienteException {
 
         try (Connection conexion = ConexionBD.obtenerConexion()) {
             conexion.setAutoCommit(false);
             try {
                 // 1. Cliente (buscar o crear)
-                int idCliente = clienteDAO.obtenerOCrearCliente(conexion, nombreCliente, correoCliente);
+                int idCliente = clienteDAO.obtenerOCrearCliente(conexion, nombreCliente, correoCliente, cedulaCliente, telefonoCliente);
                 venta.setIdCliente(idCliente);
                 venta.setFecha(LocalDateTime.now());
                 venta.setEstadoEnvio("pendiente");

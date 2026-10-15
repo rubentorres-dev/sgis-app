@@ -24,15 +24,20 @@ public class AutocompletarCliente {
 
     private final TextField campoNombre;
     private final TextField campoCorreo;
+    private final TextField campoCedula;
+    private final TextField campoTelefono;
     private final ContextMenu menu = new ContextMenu();
     private List<Cliente> clientes = new ArrayList<>();
     private boolean rellenando = false;
 
-    public AutocompletarCliente(TextField campoNombre, TextField campoCorreo) {
+    public AutocompletarCliente(TextField campoNombre, TextField campoCorreo, TextField campoCedula, TextField campoTelefono) {
         this.campoNombre = campoNombre;
         this.campoCorreo = campoCorreo;
+        this.campoCedula = campoCedula;
+        this.campoTelefono = campoTelefono;
         escuchar(campoNombre);
         escuchar(campoCorreo);
+        escuchar(campoCedula);
     }
 
     /** Actualiza la lista de clientes registrados contra la que se compara lo que se escribe. */
@@ -61,9 +66,12 @@ public class AutocompletarCliente {
             return;
         }
 
+        // Si lo escrito son solo números, también se busca por cédula.
+        final String digitos = buscado.matches("[0-9.\\s]+") ? buscado.replaceAll("[^0-9]", "") : "";
         List<Cliente> coincidencias = clientes.stream()
                 .filter(c -> c.getNombre().toLowerCase().contains(buscado)
-                          || c.getCorreo().toLowerCase().contains(buscado))
+                          || c.getCorreo().toLowerCase().contains(buscado)
+                          || (!digitos.isEmpty() && c.getCedula() != null && c.getCedula().contains(digitos)))
                 .limit(MAX_SUGERENCIAS)
                 .collect(Collectors.toList());
         if (coincidencias.isEmpty()) {
@@ -83,6 +91,8 @@ public class AutocompletarCliente {
         rellenando = true;
         campoNombre.setText(cliente.getNombre());
         campoCorreo.setText(cliente.getCorreo());
+        campoCedula.setText(cliente.getCedula() == null ? "" : cliente.getCedula());
+        campoTelefono.setText(cliente.getTelefono() == null ? "" : cliente.getTelefono());
         rellenando = false;
         menu.hide();
     }

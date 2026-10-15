@@ -1,8 +1,10 @@
 package sgis.vista;
 
+import sgis.controlador.CategoriaController;
 import sgis.controlador.ProductoController;
 import sgis.modelo.Categoria;
 import sgis.modelo.Producto;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -13,7 +15,9 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 /**
@@ -23,6 +27,10 @@ import java.util.ResourceBundle;
 public class ProductoFormVista implements Initializable {
 
     private final ProductoController productoController = new ProductoController();
+    private final CategoriaController categoriaController = new CategoriaController();
+
+    /** Opción al final de la lista de categorías: cualquier usuario puede crear una categoría nueva desde aquí. */
+    private final Categoria opcionNuevaCategoria = new Categoria(-1, "➕ Nueva categoría");
 
     @FXML private Label lblTitulo;
     @FXML private TextField campoNombre;
@@ -39,12 +47,49 @@ public class ProductoFormVista implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         comboEstado.setItems(FXCollections.observableArrayList("activo", "inactivo"));
+        recargarCategorias();
+        comboCategoria.valueProperty().addListener((obs, anterior, nueva) -> {
+            if (nueva == opcionNuevaCategoria) {
+                Platform.runLater(() -> crearCategoriaDesdeLista(anterior));
+            }
+        });
+    }
+
+    /** Carga las categorías en la lista y deja «➕ Nueva categoría» como última opción. */
+    private void recargarCategorias() {
         try {
-            List<Categoria> categorias = productoController.obtenerCategorias();
-            comboCategoria.setItems(FXCollections.observableArrayList(categorias));
+            List<Categoria> opciones = new ArrayList<>(productoController.obtenerCategorias());
+            opciones.add(opcionNuevaCategoria);
+            comboCategoria.setItems(FXCollections.observableArrayList(opciones));
         } catch (RuntimeException e) {
             lblMensaje.setText("Error al cargar categorías: " + e.getMessage());
         }
+    }
+
+    /** Pide el nombre, crea la categoría (no hace falta tener acceso a Configuración) y la deja elegida. */
+    private void crearCategoriaDesdeLista(Categoria seleccionAnterior) {
+        Optional<String> nombre = Dialogos.pedirTexto("Nueva categoría", "Nombre de la categoría:", "");
+        if (nombre.isEmpty()) {
+            comboCategoria.setValue(seleccionAnterior);
+            return;
+        }
+        String error = categoriaController.crear(nombre.get());
+        if (error != null) {
+            comboCategoria.setValue(seleccionAnterior);
+            lblMensaje.setStyle("");
+            lblMensaje.setText("✘ " + error);
+            return;
+        }
+        recargarCategorias();
+        String buscado = nombre.get().trim();
+        for (Categoria c : comboCategoria.getItems()) {
+            if (c.getNombre().equalsIgnoreCase(buscado)) {
+                comboCategoria.setValue(c);
+                break;
+            }
+        }
+        lblMensaje.setStyle("-fx-text-fill: #1E9E5B;");
+        lblMensaje.setText("✔ Categoría \"" + buscado + "\" creada.");
     }
 
     /**
@@ -83,7 +128,7 @@ public class ProductoFormVista implements Initializable {
             lblMensaje.setText("El nombre es obligatorio.");
             return;
         }
-        if (categoria == null) {
+        if (categoria == null || categoria == opcionNuevaCategoria) {
             lblMensaje.setText("Selecciona una categoría.");
             return;
         }

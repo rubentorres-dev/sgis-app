@@ -169,7 +169,7 @@ public final class Permisos {
             case "REPORTES":
                 return "Reportes";
             case "USUARIOS":
-                return "Usuarios (clientes)";
+                return "Clientes";
             case "CONFIGURACION":
                 return "Configuración";
             default:

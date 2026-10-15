@@ -4,6 +4,7 @@ import sgis.controlador.ClienteController;
 import sgis.modelo.Cliente;
 import sgis.util.Permisos;
 import sgis.util.Sesion;
+import sgis.util.Telefono;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -21,11 +22,13 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 /**
- * Controlador de la pantalla "Usuarios" (usuarios.fxml).
+ * Controlador de la pantalla "Clientes" (usuarios.fxml).
  *
  * Esta pantalla muestra a las personas registradas como clientes (quienes compran o
  * necesitan facturación). Permite buscar si una persona ya está registrada, registrar
@@ -36,6 +39,8 @@ public class UsuariosVista implements Initializable {
 
     private final ClienteController clienteController = new ClienteController();
     private FilteredList<Cliente> clientesFiltrados;
+    /** Cédulas que están a la vista ahora mismo (id de cliente → cédula con puntos). */
+    private final Map<Integer, String> cedulasReveladas = new HashMap<>();
 
     @FXML private TextField campoBusqueda;
     @FXML private Label lblResultado;
@@ -44,6 +49,8 @@ public class UsuariosVista implements Initializable {
     @FXML private TableColumn<Cliente, String> colId;
     @FXML private TableColumn<Cliente, String> colNombre;
     @FXML private TableColumn<Cliente, String> colCorreo;
+    @FXML private TableColumn<Cliente, Cliente> colCedula;
+    @FXML private TableColumn<Cliente, String> colTelefono;
     @FXML private TableColumn<Cliente, Cliente> colAcciones;
 
     @Override
@@ -54,6 +61,11 @@ public class UsuariosVista implements Initializable {
         colId.setCellValueFactory(param -> new SimpleStringProperty(String.valueOf(param.getValue().getIdCliente())));
         colNombre.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getNombre()));
         colCorreo.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getCorreo()));
+        colTelefono.setCellValueFactory(param -> new SimpleStringProperty(
+                param.getValue().getTelefono() == null ? "Sin teléfono" : Telefono.formatear(param.getValue().getTelefono())));
+        // La cédula aparece oculta; el ojito la muestra y cada consulta queda en la auditoría.
+        ColumnaCedula.instalar(colCedula, tablaUsuarios, clienteController, cedulasReveladas,
+                mensaje -> Mensajes.error(lblMensaje, mensaje));
 
         colAcciones.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue()));
         colAcciones.setCellFactory(col -> new TableCell<>() {
@@ -78,13 +90,14 @@ public class UsuariosVista implements Initializable {
 
     private void cargarClientes() {
         try {
+            cedulasReveladas.clear(); // al recargar, todas las cédulas vuelven a ocultarse
             List<Cliente> clientes = clienteController.obtenerClientes();
             ObservableList<Cliente> datos = FXCollections.observableArrayList(clientes);
             clientesFiltrados = new FilteredList<>(datos, c -> true);
             tablaUsuarios.setItems(clientesFiltrados);
             filtrar(campoBusqueda.getText());
         } catch (RuntimeException e) {
-            lblMensaje.setText("Error al cargar los usuarios: " + e.getMessage());
+            lblMensaje.setText("Error al cargar los clientes: " + e.getMessage());
         }
     }
 
@@ -129,7 +142,7 @@ public class UsuariosVista implements Initializable {
 
             Stage dialogo = new Stage();
             dialogo.initModality(Modality.APPLICATION_MODAL);
-            dialogo.setTitle(clienteAEditar == null ? "Registrar usuario" : "Modificar usuario");
+            dialogo.setTitle(clienteAEditar == null ? "Registrar cliente" : "Modificar cliente");
             dialogo.setScene(new Scene(root));
             dialogo.showAndWait();
         } catch (Exception e) {

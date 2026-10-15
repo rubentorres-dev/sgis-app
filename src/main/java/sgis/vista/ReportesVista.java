@@ -480,11 +480,11 @@ public class ReportesVista implements Initializable {
         LocalDate hasta = dpHasta.getValue();
 
         if (desde == null || hasta == null) {
-            lblInforme.setText("✘ Elige las dos fechas (desde y hasta).");
+            Mensajes.error(lblInforme, "Elige las dos fechas (desde y hasta).");
             return;
         }
         if (desde.isAfter(hasta)) {
-            lblInforme.setText("✘ La fecha \"desde\" no puede ser posterior a la fecha \"hasta\".");
+            Mensajes.error(lblInforme, "La fecha \"desde\" no puede ser posterior a la fecha \"hasta\".");
             return;
         }
 
@@ -504,11 +504,10 @@ public class ReportesVista implements Initializable {
         try {
             List<VentaResumen> ventas = ventaController.obtenerVentasResumen(desde, hasta);
             informeService.generarInformeVentas(ventas, desde, hasta, destino);
-            lblInforme.setText("✔ Informe guardado en: " + destino.getAbsolutePath()
-                    + "  (" + ventas.size() + " venta(s))");
+            Mensajes.exito(lblInforme, "Reporte descargado (" + ventas.size() + " venta(s))", destino.getAbsolutePath());
             abrirArchivo(destino);
         } catch (IOException | RuntimeException e) {
-            lblInforme.setText("✘ No se pudo generar el informe: " + e.getMessage());
+            Mensajes.error(lblInforme, "No se pudo generar el informe: " + e.getMessage());
         }
     }
 

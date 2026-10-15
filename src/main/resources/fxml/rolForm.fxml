@@ -30,7 +30,7 @@
         <CheckBox fx:id="chkProductos" text="Productos" />
         <CheckBox fx:id="chkVentas" text="Ventas" />
         <CheckBox fx:id="chkReportes" text="Reportes" />
-        <CheckBox fx:id="chkUsuarios" text="Usuarios (clientes)" />
+        <CheckBox fx:id="chkUsuarios" text="Clientes" />
     </VBox>
     <Label styleClass="form-nota" wrapText="true"
            text="Configuración es solo para el Administrador y no se puede dar a otros roles." />

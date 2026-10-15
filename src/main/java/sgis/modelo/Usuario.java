@@ -82,4 +82,26 @@ public class Usuario {
     public void setEstado(String estado) {
         this.estado = estado;
     }
+
+    /** Cédula (solo dígitos). Solo se llena al crear o editar un usuario: las listas no la cargan. */
+    private String cedula;
+
+    public String getCedula() {
+        return cedula;
+    }
+
+    public void setCedula(String cedula) {
+        this.cedula = cedula;
+    }
+
+    /** Teléfono (solo dígitos). Solo se llena al crear o editar un usuario: las listas no lo cargan. */
+    private String telefono;
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
 }

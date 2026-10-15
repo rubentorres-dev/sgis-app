@@ -6,6 +6,7 @@ import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -69,6 +70,12 @@ public class CampoContrasena extends StackPane {
         TextField activo = mostrando ? visible : oculto;
         activo.requestFocus();
         activo.positionCaret(activo.getLength());
+    }
+
+    /** Limita lo escrito a números (y puntos) con a lo sumo maxDigitos dígitos: el siguiente número ya no se escribe. */
+    public void soloNumeros(int maxDigitos) {
+        oculto.setTextFormatter(new TextFormatter<String>(Campos.filtro(maxDigitos, true)));
+        visible.setTextFormatter(new TextFormatter<String>(Campos.filtro(maxDigitos, true)));
     }
 
     public String getText() {

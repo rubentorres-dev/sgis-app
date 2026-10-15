@@ -38,6 +38,9 @@ public class UsuarioSistemaFormVista implements Initializable {
 
     @FXML private Label lblTitulo;
     @FXML private TextField campoNombre;
+    @FXML private CampoContrasena campoCedula;
+    @FXML private TextField campoTelefono;
+    @FXML private Label lblNotaClave;
     @FXML private TextField campoLogin;
     @FXML private ComboBox<String> comboRol;
     @FXML private VBox boxAccesoRol;
@@ -72,6 +75,9 @@ public class UsuarioSistemaFormVista implements Initializable {
             casilla.setFocusTraversable(false);
         }
 
+        // La cédula no pasa de 10 dígitos y el teléfono tampoco: el siguiente número ya no se escribe.
+        campoCedula.soloNumeros(10);
+        Campos.soloNumeros(campoTelefono, 10, false);
         comboRol.valueProperty().addListener((obs, anterior, nuevo) -> {
             if (NUEVO_ROL.equals(nuevo)) {
                 // Se espera a que termine el evento de selección antes de abrir el cuadro.
@@ -107,15 +113,20 @@ public class UsuarioSistemaFormVista implements Initializable {
         if (usuario != null) {
             lblTitulo.setText("Editar usuario");
             campoNombre.setText(usuario.getNombre());
+            campoCedula.setText(usuarioController.obtenerCedulaDeUsuario(usuario));
+            campoCedula.setPromptText("Vacía = sin cambios");
+            campoTelefono.setText(usuarioController.obtenerTelefonoDeUsuario(usuario));
             campoLogin.setText(usuario.getUsuarioLogin());
             campoLogin.setDisable(true); // el nombre de usuario no se cambia
             comboRol.setValue(usuario.getRol());
             // Al editar, los dos campos de contraseña cambian de sentido: primero se pega la clave temporal
             // (la que generó el botón Clave) y luego se escribe la contraseña nueva. Vacíos = no cambiarla.
-            lblContrasena.setText("Clave temporal (pégala aquí solo si vas a cambiar la contraseña)");
-            campoContrasena.setPromptText("Pega la clave temporal");
-            lblConfirmar.setText("Contraseña nueva (mínimo 6 caracteres)");
-            campoConfirmar.setPromptText("Escribe la contraseña nueva");
+            lblContrasena.setText("Clave temporal");
+            campoContrasena.setPromptText("Pégala aquí");
+            lblConfirmar.setText("Contraseña nueva");
+            campoConfirmar.setPromptText("Mínimo 6");
+            lblNotaClave.setVisible(true);
+            lblNotaClave.setManaged(true);
         } else {
             lblTitulo.setText("Nuevo usuario");
             // Por defecto, el rol de menos permisos que exista (o el primero de la lista).
@@ -154,12 +165,14 @@ public class UsuarioSistemaFormVista implements Initializable {
 
         String error;
         if (usuarioAEditar == null) {
-            error = usuarioController.registrarUsuario(nombre, rol, campoLogin.getText(), contrasena);
+            error = usuarioController.registrarUsuario(nombre, rol, campoLogin.getText(), contrasena, campoCedula.getText(), campoTelefono.getText());
         } else {
             Usuario editado = new Usuario();
             editado.setIdUsuario(usuarioAEditar.getIdUsuario());
             editado.setNombre(nombre);
             editado.setRol(rol);
+            editado.setCedula(campoCedula.getText());
+            editado.setTelefono(campoTelefono.getText());
             error = usuarioController.actualizarUsuario(editado, Sesion.getUsuarioActual());
             if (error == null && escribioClave) {
                 error = usuarioController.cambiarContrasenaConClaveTemporal(usuarioAEditar, contrasena, confirmar);

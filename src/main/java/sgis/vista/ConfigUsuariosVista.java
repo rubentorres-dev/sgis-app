@@ -5,6 +5,7 @@ import sgis.modelo.Usuario;
 import sgis.util.PasswordUtil;
 import sgis.util.Permisos;
 import sgis.util.Sesion;
+import sgis.util.Telefono;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -60,6 +61,10 @@ public class ConfigUsuariosVista implements Initializable {
     private Set<Integer> conCodigo = new HashSet<>();
     /** true si quien tiene la sesión abierta es el administrador principal (el único que genera códigos nuevos). */
     private boolean esPrincipal;
+    /** Cédula y teléfono de cada usuario (id → {cédula, teléfono}). */
+    private Map<Integer, String[]> contactos = new HashMap<>();
+    /** Cédulas que el Administrador tiene a la vista ahora mismo (id de usuario → cédula con puntos). */
+    private final Map<Integer, String> cedulasReveladas = new HashMap<>();
 
     @FXML private TextField campoBusqueda;
     @FXML private Label lblResultado;
@@ -70,6 +75,8 @@ public class ConfigUsuariosVista implements Initializable {
     @FXML private TableColumn<Usuario, String> colRol;
     @FXML private TableColumn<Usuario, Usuario> colContrasena;
     @FXML private TableColumn<Usuario, Usuario> colCodigo;
+    @FXML private TableColumn<Usuario, Usuario> colCedula;
+    @FXML private TableColumn<Usuario, String> colTelefono;
     @FXML private TableColumn<Usuario, Usuario> colEstado;
     @FXML private TableColumn<Usuario, Usuario> colAcciones;
 
@@ -113,6 +120,54 @@ public class ConfigUsuariosVista implements Initializable {
                 ojo.setManaged(!u.isProtegido());
                 setGraphic(caja);
             }
+        });
+
+        // Cédula: oculta con puntos; el ojito la muestra (solo Administradores) y la consulta queda en la auditoría.
+        // La del usuario protegido tiene candado: nadie puede verla. El teléfono sí se ve.
+        colCedula.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue()));
+        colCedula.setCellFactory(col -> new TableCell<>() {
+            private final Label texto = new Label();
+            private final ImageView icono = new ImageView();
+            private final Button ojo = new Button();
+            private final Label candado = new Label("🔒");
+            private final HBox caja = new HBox(6, texto, ojo, candado);
+
+            {
+                icono.setFitWidth(18);
+                icono.setFitHeight(18);
+                icono.setPreserveRatio(true);
+                ojo.setGraphic(icono);
+                ojo.setStyle("-fx-background-color: transparent; -fx-padding: 2 4 2 4; -fx-cursor: hand;");
+                caja.setAlignment(Pos.CENTER_LEFT);
+            }
+
+            @Override
+            protected void updateItem(Usuario u, boolean vacio) {
+                super.updateItem(u, vacio);
+                if (vacio || u == null) {
+                    setGraphic(null);
+                    return;
+                }
+                String[] contacto = contactos.get(u.getIdUsuario());
+                String cedula = contacto == null ? null : contacto[0];
+                boolean tiene = cedula != null && !cedula.isBlank();
+                boolean visible = cedulasReveladas.containsKey(u.getIdUsuario());
+                texto.setText(!tiene ? "Sin cédula" : (visible ? cedulasReveladas.get(u.getIdUsuario()) : "••••••••••"));
+                texto.setStyle(visible ? "-fx-font-family: 'Consolas', 'Courier New', monospace; -fx-font-weight: bold;" : "");
+                icono.setImage(visible ? imagenOjoTachado : imagenOjo);
+                boolean conOjo = tiene && !u.isProtegido();
+                ojo.setVisible(conOjo);
+                ojo.setManaged(conOjo);
+                candado.setVisible(tiene && u.isProtegido());
+                candado.setManaged(tiene && u.isProtegido());
+                ojo.setOnAction(e -> alternarCedula(u, cedula));
+                setGraphic(caja);
+            }
+        });
+        colTelefono.setCellValueFactory(param -> {
+            String[] contacto = contactos.get(param.getValue().getIdUsuario());
+            return new SimpleStringProperty(contacto == null || contacto[1] == null || contacto[1].isBlank()
+                    ? "Sin teléfono" : Telefono.formatear(contacto[1]));
         });
 
         // Código de recuperación de 6 dígitos: lo ve todo Administrador (el ojo lo muestra u oculta). Generar uno
@@ -232,6 +287,8 @@ public class ConfigUsuariosVista implements Initializable {
     private void cargarUsuarios() {
         reveladas.clear(); // al recargar, todas las contraseñas vuelven a ocultarse
         codigosRevelados.clear();
+        cedulasReveladas.clear();
+        contactos = usuarioController.contactosDeUsuarios();
         conCodigo = usuarioController.usuariosConCodigo();
         try {
             List<Usuario> usuarios = usuarioController.obtenerUsuarios();
@@ -290,6 +347,22 @@ public class ConfigUsuariosVista implements Initializable {
                     reveladas.put(u.getIdUsuario(), contrasena);
                 }
             } catch (RuntimeException e) {
+                mostrarError(e.getMessage());
+                return;
+            }
+        }
+        tablaUsuarios.refresh();
+    }
+
+    /** Muestra u oculta la cédula de un usuario (solo Administradores; la consulta queda en la auditoría). */
+    private void alternarCedula(Usuario u, String cedula) {
+        if (cedulasReveladas.containsKey(u.getIdUsuario())) {
+            cedulasReveladas.remove(u.getIdUsuario());
+        } else {
+            try {
+                cedulasReveladas.put(u.getIdUsuario(),
+                        usuarioController.verCedulaDeUsuario(Sesion.getUsuarioActual(), u, cedula));
+            } catch (SecurityException e) {
                 mostrarError(e.getMessage());
                 return;
             }

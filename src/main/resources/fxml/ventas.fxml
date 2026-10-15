@@ -70,6 +70,10 @@
                     <Label text="Datos del Cliente" styleClass="topbar-title" />
                     <Label text="Nombre del cliente" />
                     <TextField fx:id="campoNombreCliente" promptText="Escribe para buscar clientes registrados" />
+                    <Label text="Cédula de ciudadanía" />
+                    <TextField fx:id="campoCedulaCliente" promptText="Solo números (6 a 10 dígitos)" />
+                    <Label text="Teléfono" />
+                    <TextField fx:id="campoTelefonoCliente" promptText="Ej. 3001234567" />
                     <Label text="Correo electrónico" />
                     <TextField fx:id="campoCorreoCliente" promptText="correo@ejemplo.com" />
                     <Label text="Método de pago" />

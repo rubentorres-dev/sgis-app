@@ -6,6 +6,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import sgis.vista.CampoContrasena?>
 
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
@@ -17,7 +18,7 @@
         <Insets top="28" right="32" bottom="26" left="32" />
     </padding>
 
-    <Label fx:id="lblTitulo" styleClass="form-titulo" text="Registrar usuario" />
+    <Label fx:id="lblTitulo" styleClass="form-titulo" text="Registrar cliente" />
     <Label styleClass="form-subtitulo" text="Personas que compran o necesitan factura." />
 
     <Label styleClass="form-etiqueta" text="Nombre completo" style="-fx-padding: 12 0 0 0;" />
@@ -25,6 +26,12 @@
 
     <Label styleClass="form-etiqueta" text="Correo electrónico" style="-fx-padding: 8 0 0 0;" />
     <TextField fx:id="campoCorreo" styleClass="form-campo" promptText="correo@ejemplo.com" />
+
+    <Label styleClass="form-etiqueta" text="Cédula de ciudadanía" style="-fx-padding: 8 0 0 0;" />
+    <CampoContrasena fx:id="campoCedula" promptText="Solo números (6 a 10 dígitos)" />
+
+    <Label styleClass="form-etiqueta" text="Teléfono" style="-fx-padding: 8 0 0 0;" />
+    <TextField fx:id="campoTelefono" styleClass="form-campo" promptText="Ej. 3001234567" />
 
     <Label styleClass="form-nota" wrapText="true" text="El comprobante de compra y la factura se enviarán a este correo." />
 

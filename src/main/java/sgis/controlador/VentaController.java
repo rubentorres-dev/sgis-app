@@ -7,6 +7,10 @@ import sgis.modelo.Venta;
 import sgis.modelo.VentaResumen;
 import sgis.servicio.ComprobanteService;
 import sgis.servicio.EmailService;
+import sgis.util.Cedula;
+import sgis.util.MensajesBD;
+import sgis.util.Telefono;
+import sgis.util.DatosClienteException;
 import sgis.util.StockInsuficienteException;
 
 import java.sql.SQLException;
@@ -36,7 +40,7 @@ public class VentaController {
      * Registra una venta completa.
      * @return null si todo salió bien, o un mensaje de error para mostrar en pantalla.
      */
-    public String registrarVenta(String nombreCliente, String correoCliente, String metodoPago,
+    public String registrarVenta(String nombreCliente, String correoCliente, String cedulaCliente, String telefonoCliente, String metodoPago,
                                  Integer idUsuario, List<DetalleVenta> lineas) {
         // La pantalla ya valida casi todo; esto protege al sistema si algo llega sin pasar por ella.
         if (lineas == null || lineas.isEmpty()) {
@@ -50,6 +54,16 @@ public class VentaController {
         if (nombreCliente == null || nombreCliente.isBlank()) {
             return "Escribe el nombre del cliente.";
         }
+        String errorCedula = Cedula.validar(cedulaCliente);
+        if (errorCedula != null) {
+            return errorCedula;
+        }
+        final String cedula = Cedula.normalizar(cedulaCliente);
+        String errorTelefono = Telefono.validar(telefonoCliente);
+        if (errorTelefono != null) {
+            return errorTelefono;
+        }
+        final String telefono = Telefono.normalizar(telefonoCliente);
         if (!ClienteController.correoValido(correoCliente)) {
             return "Escribe un correo válido para el cliente (por ejemplo, nombre@correo.com).";
         }
@@ -61,10 +75,14 @@ public class VentaController {
 
         try {
             // 1. Guardar la venta, el detalle y descontar stock (todo transaccional)
-            ventaDAO.registrarVenta(venta, nombreCliente, correoCliente);
-        } catch (StockInsuficienteException e) {
+            ventaDAO.registrarVenta(venta, nombreCliente, correoCliente, cedula, telefono);
+        } catch (StockInsuficienteException | DatosClienteException e) {
             return e.getMessage();
         } catch (SQLException e) {
+            String falta = MensajesBD.scriptFaltante(e);
+            if (falta != null) {
+                return falta;
+            }
             return "Error al registrar la venta: " + e.getMessage();
         }
 

@@ -53,6 +53,8 @@ public class VentasVista implements Initializable {
 
     @FXML private TextField campoNombreCliente;
     @FXML private TextField campoCorreoCliente;
+    @FXML private TextField campoCedulaCliente;
+    @FXML private TextField campoTelefonoCliente;
     @FXML private ComboBox<String> comboMetodoPago;
     @FXML private Button btnFactura;
     @FXML private Label lblTotal;
@@ -66,7 +68,10 @@ public class VentasVista implements Initializable {
         comboMetodoPago.setValue("Efectivo");
 
         // Autocompletado: al escribir, sugiere clientes ya registrados
-        autocompletar = new AutocompletarCliente(campoNombreCliente, campoCorreoCliente);
+        // La cédula admite números y puntos y no pasa de 10 dígitos; el teléfono, solo números y hasta 10 dígitos.
+        Campos.soloNumeros(campoCedulaCliente, 10, true);
+        Campos.soloNumeros(campoTelefonoCliente, 10, false);
+        autocompletar = new AutocompletarCliente(campoNombreCliente, campoCorreoCliente, campoCedulaCliente, campoTelefonoCliente);
         cargarClientes();
         btnFactura.setDisable(true); // se activa cuando se registra una venta
 
@@ -107,7 +112,7 @@ public class VentasVista implements Initializable {
                     .collect(Collectors.toList());
             comboProducto.setItems(FXCollections.observableArrayList(productos));
         } catch (RuntimeException e) {
-            lblMensaje.setText("Error al cargar productos: " + e.getMessage());
+            Mensajes.normal(lblMensaje, "Error al cargar productos: " + e.getMessage());
         }
     }
 
@@ -115,7 +120,7 @@ public class VentasVista implements Initializable {
     private void agregarAlCarrito(ActionEvent event) {
         Producto producto = comboProducto.getValue();
         if (producto == null) {
-            lblMensaje.setText("Selecciona un producto.");
+            Mensajes.normal(lblMensaje, "Selecciona un producto.");
             return;
         }
 
@@ -123,11 +128,11 @@ public class VentasVista implements Initializable {
         try {
             cantidad = Integer.parseInt(campoCantidadCarrito.getText().trim());
             if (cantidad <= 0) {
-                lblMensaje.setText("La cantidad debe ser mayor a 0.");
+                Mensajes.normal(lblMensaje, "La cantidad debe ser mayor a 0.");
                 return;
             }
         } catch (NumberFormatException e) {
-            lblMensaje.setText("Ingresa una cantidad válida.");
+            Mensajes.normal(lblMensaje, "Ingresa una cantidad válida.");
             return;
         }
 
@@ -145,7 +150,7 @@ public class VentasVista implements Initializable {
                 producto.getIdProducto(), producto.getNombre(), cantidad, producto.getPrecio());
         carrito.add(nuevaLinea);
         actualizarTotal();
-        lblMensaje.setText("");
+        Mensajes.normal(lblMensaje, "");
     }
 
     private void actualizarTotal() {
@@ -156,33 +161,38 @@ public class VentasVista implements Initializable {
     @FXML
     private void confirmarVenta(ActionEvent event) {
         if (carrito.isEmpty()) {
-            lblMensaje.setText("Agrega al menos un producto al carrito.");
+            Mensajes.normal(lblMensaje, "Agrega al menos un producto al carrito.");
             return;
         }
         String nombre = campoNombreCliente.getText();
         String correo = campoCorreoCliente.getText();
-        if (nombre == null || nombre.isBlank() || correo == null || correo.isBlank()) {
-            lblMensaje.setText("Completa el nombre y correo del cliente.");
+        String cedula = campoCedulaCliente.getText();
+        String telefono = campoTelefonoCliente.getText();
+        if (nombre == null || nombre.isBlank() || correo == null || correo.isBlank()
+                || cedula == null || cedula.isBlank() || telefono == null || telefono.isBlank()) {
+            Mensajes.normal(lblMensaje, "Completa el nombre, la cédula, el teléfono y el correo del cliente.");
             return;
         }
 
         String metodoPago = comboMetodoPago.getValue().toLowerCase();
         Integer idUsuario = Sesion.getUsuarioActual() == null ? null : Sesion.getUsuarioActual().getIdUsuario();
-        String error = ventaController.registrarVenta(nombre, correo, metodoPago, idUsuario, List.copyOf(carrito));
+        String error = ventaController.registrarVenta(nombre, correo, cedula, telefono, metodoPago, idUsuario, List.copyOf(carrito));
 
         if (error == null) {
-            lblMensaje.setText("✔ Venta registrada correctamente. Comprobante generado abajo.");
+            Mensajes.normal(lblMensaje, "✔ Venta registrada correctamente. Comprobante generado abajo.");
             areaComprobante.setText(ventaController.getUltimoComprobante());
             carrito.clear();
             actualizarTotal();
             campoNombreCliente.clear();
             campoCorreoCliente.clear();
+            campoCedulaCliente.clear();
+            campoTelefonoCliente.clear();
             comboMetodoPago.setValue("Efectivo");
             cargarProductos(); // refresca precios/stock por si algo cambió
             cargarClientes();  // el cliente de esta venta ya queda registrado
             btnFactura.setDisable(false);
         } else {
-            lblMensaje.setText("✘ " + error);
+            Mensajes.normal(lblMensaje, "✘ " + error);
         }
     }
 
@@ -196,7 +206,7 @@ public class VentasVista implements Initializable {
         try {
             autocompletar.setClientes(clienteController.obtenerClientes());
         } catch (RuntimeException e) {
-            lblMensaje.setText("Error al cargar los clientes registrados: " + e.getMessage());
+            Mensajes.normal(lblMensaje, "Error al cargar los clientes registrados: " + e.getMessage());
         }
     }
 
@@ -205,7 +215,7 @@ public class VentasVista implements Initializable {
     private void generarFactura(ActionEvent event) {
         Venta venta = ventaController.getUltimaVenta();
         if (venta == null) {
-            lblMensaje.setText("Primero registra una venta para poder generar su factura.");
+            Mensajes.normal(lblMensaje, "Primero registra una venta para poder generar su factura.");
             return;
         }
 
@@ -227,12 +237,11 @@ public class VentasVista implements Initializable {
                     ventaController.getUltimoCorreoCliente(), destino);
             // El PDF se generó y se guardó: el comprobante de esta venta queda completado.
             String errorEstado = ventaController.marcarComprobanteCompletado(venta.getIdVenta());
-            lblMensaje.setText(errorEstado == null
-                    ? "✔ Factura guardada en: " + destino.getAbsolutePath() + " (comprobante completado)"
-                    : "✔ Factura guardada en: " + destino.getAbsolutePath() + ". " + errorEstado);
+            Mensajes.exito(lblMensaje, errorEstado == null ? "Factura descargada" : "Factura descargada. " + errorEstado,
+                    destino.getAbsolutePath());
             Archivos.abrir(destino);
         } catch (IOException | RuntimeException e) {
-            lblMensaje.setText("✘ No se pudo generar la factura: " + e.getMessage());
+            Mensajes.error(lblMensaje, "No se pudo generar la factura: " + e.getMessage());
         }
     }
 }

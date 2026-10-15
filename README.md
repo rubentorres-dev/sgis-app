@@ -62,6 +62,10 @@ En phpMyAdmin (pestaña **SQL**), ejecuta los scripts de la carpeta `base_de_dat
 10. `proteger_usuario_admin.sql` (deja protegido al usuario `admin`: nadie puede editarlo, desactivarlo ni eliminarlo)
 11. `agregar_codigo_recuperacion.sql` (agrega la columna del código de recuperación de 6 dígitos)
 12. `agregar_codigo_visible.sql` (copia cifrada del código, para que los Administradores lo vean en Configuración)
+13. `agregar_cedula.sql` (cédula de ciudadanía de clientes y usuarios del sistema)
+14. `agregar_telefono.sql` (teléfono de clientes y usuarios del sistema)
+
+Opcional (no forma parte de la instalación): `datos_de_prueba_contacto.sql` rellena con valores de prueba la cédula y el teléfono de los registros que aún no los tienen.
 
 Script de EMERGENCIA (no forma parte de la instalación): `desbloquear_sistema.sql` desbloquea el sistema si queda bloqueado por un ataque de fuerza bruta y ningún administrador puede hacerlo desde la pantalla del candado.
 

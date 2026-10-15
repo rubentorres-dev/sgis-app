@@ -59,7 +59,7 @@
             </ImageView>
         </graphic>
     </Button>
-    <Button fx:id="btnUsuarios" styleClass="nav-item" text="Usuarios" maxWidth="Infinity" onAction="#irAUsuarios">
+    <Button fx:id="btnUsuarios" styleClass="nav-item" text="Clientes" maxWidth="Infinity" onAction="#irAUsuarios">
         <graphic>
             <ImageView fitWidth="18" fitHeight="18" preserveRatio="true">
                 <image>

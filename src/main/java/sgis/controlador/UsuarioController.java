@@ -5,6 +5,9 @@ import sgis.db.AuditoriaDAO;
 import sgis.db.UsuarioDAO;
 import sgis.modelo.Usuario;
 import sgis.servicio.AuditoriaService;
+import sgis.util.Cedula;
+import sgis.util.MensajesBD;
+import sgis.util.Telefono;
 import sgis.util.CifradoContrasena;
 import sgis.util.CodigoRecuperacion;
 import sgis.util.ControlIntentosLogin;
@@ -110,7 +113,7 @@ public class UsuarioController {
         }
     }
 
-    public String registrarUsuario(String nombre, String rol, String login, String contrasena) {
+    public String registrarUsuario(String nombre, String rol, String login, String contrasena, String cedula, String telefono) {
         codigoUltimoUsuarioCreado = null;
         problemaCodigo = null;
         if (nombre == null || nombre.isBlank()) {
@@ -125,6 +128,16 @@ public class UsuarioController {
         if (login == null || !LOGIN_VALIDO.matcher(login.trim()).matches()) {
             return "El usuario debe tener entre 3 y 30 caracteres (letras, números, punto, guion o guion bajo, sin espacios).";
         }
+        String errorCedula = Cedula.validar(cedula);
+        if (errorCedula != null) {
+            return errorCedula;
+        }
+        final String cedulaDigitos = Cedula.normalizar(cedula);
+        String errorTelefono = Telefono.validar(telefono);
+        if (errorTelefono != null) {
+            return errorTelefono;
+        }
+        final String telefonoDigitos = Telefono.normalizar(telefono);
         String errorContrasena = validarContrasena(contrasena);
         if (errorContrasena != null) {
             return errorContrasena;
@@ -134,7 +147,12 @@ public class UsuarioController {
             if (usuarioDAO.existeLogin(login.trim())) {
                 return "Ya existe un usuario con ese nombre de usuario.";
             }
+            if (usuarioDAO.existeCedula(cedulaDigitos, -1)) {
+                return "Ya existe un usuario con esa cédula.";
+            }
             Usuario u = new Usuario();
+            u.setCedula(cedulaDigitos);
+            u.setTelefono(telefonoDigitos);
             u.setNombre(nombre.trim());
             u.setRol(rol);
             u.setUsuarioLogin(login.trim());
@@ -155,11 +173,72 @@ public class UsuarioController {
             }
             return null;
         } catch (SQLException e) {
+            String falta = MensajesBD.scriptFaltante(e);
+            if (falta != null) {
+                return falta;
+            }
+            if ("23000".equals(e.getSQLState())) {
+                return "Ya existe un usuario con ese nombre de usuario o esa cédula.";
+            }
             return "Error al registrar el usuario: " + e.getMessage();
         }
     }
 
     /** Cambia el nombre y el rol de un usuario. */
+    /** La cédula de un usuario (solo dígitos) para mostrarla en el formulario de edición; vacía si no tiene o no se puede ver. */
+    /** El teléfono de un usuario (solo dígitos) para el formulario de edición; vacío si no tiene o no se puede ver. */
+    public String obtenerTelefonoDeUsuario(Usuario objetivo) {
+        if (!Permisos.esAdministrativo(Sesion.getUsuarioActual())) {
+            return "";
+        }
+        try {
+            String telefono = usuarioDAO.obtenerTelefono(objetivo.getIdUsuario());
+            return telefono == null ? "" : telefono;
+        } catch (SQLException e) {
+            return "";
+        }
+    }
+
+    /** Cédula y teléfono de todos los usuarios (id → {cédula, teléfono}) para la tabla de Configuración; solo Administradores. */
+    public java.util.Map<Integer, String[]> contactosDeUsuarios() {
+        if (!Permisos.esAdministrativo(Sesion.getUsuarioActual())) {
+            return new java.util.HashMap<>();
+        }
+        try {
+            return usuarioDAO.contactos();
+        } catch (SQLException e) {
+            return new java.util.HashMap<>();
+        }
+    }
+
+    /**
+     * La cédula de un usuario ya formateada (1.044.215.713) para el ojito de la tabla. Solo un Administrador; cada
+     * consulta queda en la auditoría. La del administrador principal está protegida: nadie puede verla.
+     */
+    public String verCedulaDeUsuario(Usuario quienPide, Usuario objetivo, String cedulaGuardada) {
+        if (!Permisos.esAdministrativo(quienPide)) {
+            throw new SecurityException("Solo un Administrador puede ver las cédulas de los usuarios.");
+        }
+        if (objetivo.isProtegido()) {
+            throw new SecurityException("La cédula del usuario protegido no se puede ver: está bloqueada.");
+        }
+        AuditoriaService.registrar(quienPide, "Vio la cédula de un usuario",
+                objetivo.getNombre() + " · usuario " + objetivo.getUsuarioLogin());
+        return Cedula.formatear(cedulaGuardada);
+    }
+
+    public String obtenerCedulaDeUsuario(Usuario objetivo) {
+        if (!Permisos.esAdministrativo(Sesion.getUsuarioActual())) {
+            return "";
+        }
+        try {
+            String cedula = usuarioDAO.obtenerCedula(objetivo.getIdUsuario());
+            return cedula == null ? "" : cedula;
+        } catch (SQLException e) {
+            return "";
+        }
+    }
+
     public String actualizarUsuario(Usuario editado, Usuario quienEdita) {
         if (editado.getNombre() == null || editado.getNombre().isBlank()) {
             return "El nombre es obligatorio.";
@@ -188,12 +267,44 @@ public class UsuarioController {
                 }
             }
 
+            // La cédula es opcional al editar: vacía = sin cambios (así los usuarios anteriores se completan).
+            String cedulaNueva = null;
+            if (editado.getCedula() != null && !editado.getCedula().isBlank()) {
+                String errorCedula = Cedula.validar(editado.getCedula());
+                if (errorCedula != null) {
+                    return errorCedula;
+                }
+                cedulaNueva = Cedula.normalizar(editado.getCedula());
+                if (usuarioDAO.existeCedula(cedulaNueva, editado.getIdUsuario())) {
+                    return "Ya existe un usuario con esa cédula.";
+                }
+            }
+
+            String telefonoNuevo = null;
+            if (editado.getTelefono() != null && !editado.getTelefono().isBlank()) {
+                String errorTelefono = Telefono.validar(editado.getTelefono());
+                if (errorTelefono != null) {
+                    return errorTelefono;
+                }
+                telefonoNuevo = Telefono.normalizar(editado.getTelefono());
+            }
+
             usuarioDAO.actualizarUsuario(editado);
+            if (cedulaNueva != null && !cedulaNueva.equals(usuarioDAO.obtenerCedula(editado.getIdUsuario()))) {
+                usuarioDAO.actualizarCedula(editado.getIdUsuario(), cedulaNueva);
+            }
+            if (telefonoNuevo != null && !telefonoNuevo.equals(usuarioDAO.obtenerTelefono(editado.getIdUsuario()))) {
+                usuarioDAO.actualizarTelefono(editado.getIdUsuario(), telefonoNuevo);
+            }
             AuditoriaService.registrar(actor(), "Editó usuario",
                     editado.getNombre() + " · usuario " + actual.getUsuarioLogin()
                     + " · rol " + actual.getRol() + " → " + editado.getRol());
             return null;
         } catch (SQLException e) {
+            String falta = MensajesBD.scriptFaltante(e);
+            if (falta != null) {
+                return falta;
+            }
             return "Error al actualizar el usuario: " + e.getMessage();
         }
     }

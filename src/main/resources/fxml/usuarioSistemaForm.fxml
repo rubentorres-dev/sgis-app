@@ -27,6 +27,18 @@
     <Label styleClass="form-etiqueta" text="Nombre completo" style="-fx-padding: 12 0 0 0;" />
     <TextField fx:id="campoNombre" styleClass="form-campo" />
 
+
+    <HBox spacing="12">
+        <VBox spacing="6" HBox.hgrow="ALWAYS">
+            <Label styleClass="form-etiqueta" text="Cédula de ciudadanía" style="-fx-padding: 8 0 0 0;" />
+            <CampoContrasena fx:id="campoCedula" promptText="Solo números" />
+        </VBox>
+        <VBox spacing="6" HBox.hgrow="ALWAYS">
+            <Label styleClass="form-etiqueta" text="Teléfono" style="-fx-padding: 8 0 0 0;" />
+            <TextField fx:id="campoTelefono" styleClass="form-campo" promptText="Ej. 3001234567" />
+        </VBox>
+    </HBox>
+
     <Label styleClass="form-etiqueta" text="Usuario (para iniciar sesión)" style="-fx-padding: 8 0 0 0;" />
     <TextField fx:id="campoLogin" styleClass="form-campo" />
 
@@ -39,7 +51,7 @@
             <CheckBox fx:id="chkAccProductos" text="Productos" />
             <CheckBox fx:id="chkAccVentas" text="Ventas" />
             <CheckBox fx:id="chkAccReportes" text="Reportes" />
-            <CheckBox fx:id="chkAccUsuarios" text="Usuarios (clientes)" />
+            <CheckBox fx:id="chkAccUsuarios" text="Clientes" />
             <CheckBox fx:id="chkAccConfiguracion" text="Configuración" />
             <CheckBox fx:id="chkAccEditar" text="Puede editar y borrar" />
         </FlowPane>
@@ -47,11 +59,18 @@
                text="Solo se muestra. Para cambiar lo que puede hacer un rol: Configuración > Roles." />
     </VBox>
 
-    <Label fx:id="lblContrasena" styleClass="form-etiqueta" text="Contraseña (mínimo 6 caracteres)" style="-fx-padding: 8 0 0 0;" />
-    <CampoContrasena fx:id="campoContrasena" />
-
-    <Label fx:id="lblConfirmar" styleClass="form-etiqueta" text="Confirmar contraseña" style="-fx-padding: 8 0 0 0;" />
-    <CampoContrasena fx:id="campoConfirmar" />
+    <HBox spacing="12">
+        <VBox spacing="6" HBox.hgrow="ALWAYS">
+            <Label fx:id="lblContrasena" styleClass="form-etiqueta" text="Contraseña (mín. 6)" style="-fx-padding: 8 0 0 0;" />
+            <CampoContrasena fx:id="campoContrasena" />
+        </VBox>
+        <VBox spacing="6" HBox.hgrow="ALWAYS">
+            <Label fx:id="lblConfirmar" styleClass="form-etiqueta" text="Confirmar contraseña" style="-fx-padding: 8 0 0 0;" />
+            <CampoContrasena fx:id="campoConfirmar" />
+        </VBox>
+    </HBox>
+    <Label fx:id="lblNotaClave" styleClass="form-nota" wrapText="true" visible="false" managed="false"
+           text="Para cambiar la contraseña, pega la clave temporal y escribe la nueva (o deja las dos vacías)." />
 
     <VBox fx:id="boxAutorizacion" styleClass="form-aviso" spacing="8">
         <Label text="🔒 Autorización de un administrador" style="-fx-font-weight: bold; -fx-text-fill: #1F5FBF;" />

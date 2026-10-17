@@ -29,7 +29,7 @@ public final class Telefono {
         return null;
     }
 
-    /** «3001234567» → «324 537 4597». */
+    /** «3001234567» → «300 123 4567». */
     public static String formatear(String digitos) {
         if (digitos == null || digitos.isBlank()) {
             return "";

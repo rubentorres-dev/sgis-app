@@ -212,7 +212,7 @@ public class UsuarioController {
     }
 
     /**
-     * La cédula de un usuario ya formateada (1.044.215.713) para el ojito de la tabla. Solo un Administrador; cada
+     * La cédula de un usuario ya formateada (0.000.000.000) para el ojito de la tabla. Solo un Administrador; cada
      * consulta queda en la auditoría. La del administrador principal está protegida: nadie puede verla.
      */
     public String verCedulaDeUsuario(Usuario quienPide, Usuario objetivo, String cedulaGuardada) {
